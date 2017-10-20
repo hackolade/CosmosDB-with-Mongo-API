@@ -1,0 +1,15 @@
+{
+	"name": "JavaScript",
+	"erdAbbreviation": "<js>",
+	"dtdAbbreviation": "{js}",
+	"useSample": true,
+	"defaultValues": {
+		"type": "JavaScript",
+		"primaryKey": false,
+		"relationshipType": "",
+		"parentRelationship": "",
+		"childRelationships": [],
+		"foreignEntity": "",
+		"foreignField": []
+	}
+}

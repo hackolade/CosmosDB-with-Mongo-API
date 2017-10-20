@@ -1,0 +1,15 @@
+{
+	"name": "symbol",
+	"erdAbbreviation": "<sbl>",
+	"dtdAbbreviation": "{sb}",
+	"useSample": true,
+	"defaultValues": {
+		"type": "symbol",
+		"primaryKey": false,
+		"relationshipType": "",
+		"parentRelationship": "",
+		"childRelationships": [],
+		"foreignEntity": "",
+		"foreignField": []
+	}
+}

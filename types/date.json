@@ -1,0 +1,17 @@
+{
+	"name": "date",
+	"erdAbbreviation": "<date>",
+	"dtdAbbreviation": "{dt}",
+	"useSample": true,
+	"defaultValues": {
+		"type": "date",
+		"primaryKey": false,
+		"relationshipType": "",
+		"parentRelationship": "",
+		"childRelationships": [],
+		"foreignEntity": "",
+		"foreignField": [],
+		"default": "",
+		"sample": ""
+	}
+}

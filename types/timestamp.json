@@ -1,0 +1,17 @@
+{
+	"name": "timestamp",
+	"erdAbbreviation": "<ts>",
+	"dtdAbbreviation": "{ts}",
+	"useSample": true,
+	"defaultValues": {
+		"type": "timestamp",
+		"primaryKey": false,
+		"relationshipType": "",
+		"parentRelationship": "",
+		"childRelationships": [],
+		"foreignEntity": "",
+		"foreignField": [],
+		"default": "",
+		"sample": ""
+	}
+}
