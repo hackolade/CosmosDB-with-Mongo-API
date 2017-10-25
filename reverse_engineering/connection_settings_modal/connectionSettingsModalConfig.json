@@ -32,7 +32,9 @@
 				"inputTooltip": "Specify the port number of the instance",
 				"inputPlaceholder": "10255"
 			}
-		],
+		]
+	},
+	{
 		"lowerTab": "Authentication",
 		"structure": [
 			{
@@ -50,7 +52,9 @@
 				"isHiddenKey": true,
 				"defaultValue": ""
 			}
-		],
+		]
+	},
+	{
 		"lowerTab": "SSL",
 		"structure": [
 			{
