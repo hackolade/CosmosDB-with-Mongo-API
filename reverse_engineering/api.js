@@ -3,13 +3,34 @@
 const documentClient = require("documentdb").DocumentClient;
 const lib = require("./node_modules/documentdb/lib/");
 const documentBase = lib.DocumentBase;
+
 const async = require('async');
 const _ = require('lodash');
+const MongoClient = require('mongodb').MongoClient;
+const ReadPreference = require('mongodb').ReadPreference;
+const readPreference = new ReadPreference('secondaryPreferred');
+const mongodbSample = require('mongodb-collection-sample');
+const mongodb = require('mongodb');
+const mongodbUri = require('mongodb-uri');
+const Connection = require('mongodb-connection-model');
+const Connect = require('mongodb-connection-model').connect;
+const fs = require('fs');
 var client;
 
 module.exports = {
 	connect: function(connectionInfo, logger, cb){
-		cb()
+		logger.log('info', connectionInfo, 'Reverse-Engineering connection settings', connectionInfo.hiddenKeys);
+		
+		generateConnectionParams(connectionInfo, logger, params => {
+			MongoClient.connect(params.url, params.options, function (err, dbConnection) {
+				if (err) {
+					logger.log('error', [params, err], "Connection error");
+					return cb(err);
+				} else {
+					return cb(null, dbConnection);
+				}
+			});
+		});
 	},
 
 	disconnect: function(connectionInfo, logger, cb){
@@ -17,128 +38,98 @@ module.exports = {
 	},
 
 	testConnection: function(connectionInfo, logger, cb){
-		logger.clear();
-		let timeoutResponse = setTimeout(() => {
-			timeoutResponse = null;
-			return cb(true);
-
-		}, 10000);
-
-		this.getDatabases(connectionInfo, logger, (err, data) => {
-			if (timeoutResponse) {
-				clearTimeout(timeoutResponse);
-				
-				if(err){
-					return cb(true);
-				} else {
-					return cb(false);
-				}
-			} 
-		});
+		this.connect(connectionInfo, logger, (err, result) => cb(err !== null));
 	},
 
 	getDatabases: function(connectionInfo, logger, cb){
-		client = setUpDocumentClient(connectionInfo);
-		logger.clear();
+		logger.log('info', ["getDatabases"], 'Where is');
 		logger.log('info', connectionInfo, 'Reverse-Engineering connection settings', connectionInfo.hiddenKeys);
-
-		listDatabases((err, dbs) => {
-			if(err){
+		this.connect(connectionInfo, logger, (err, connection) => {
+			if (err) {
 				logger.log('error', err);
 				return cb(err);
 			} else {
-				dbs = dbs.map(item => item.id);
-				logger.log('info', dbs, 'All databases list', connectionInfo.hiddenKeys);
-				return cb(err, dbs);
-			}
-		});
-	},
-
-	getDocumentKinds: function(connectionInfo, logger, cb) {
-		client = setUpDocumentClient(connectionInfo);
-		logger.log('info', connectionInfo, 'Reverse-Engineering connection settings', connectionInfo.hiddenKeys);
-
-		readDatabaseById(connectionInfo.database, (err, database) => {
-			if(err){
-				console.log(err);
-				logger.log('error', err);
-			} else {
-				listCollections(database._self, (err, collections) => {
+				listDatabases(connection, (err, dbs) => {
 					if(err){
-						console.log(err);
 						logger.log('error', err);
-						return dbItemCallback(err)
+						return cb(err);
 					} else {
-						logger.log('collections list', collections, 'Mapped collection list');
-						async.map(collections, (collectionItem, collItemCallback) => {
-							readCollectionById(database.id, collectionItem.id, (err, collection) => {
-								let amount = 1000;
-								if(err){
-									console.log(err);
-									logger.log('error', err);
-								} else {
-									documentsAmount(collection._self, (err, result) => {
-										if(err){
-											// console.log(err);
-											// logger.log('error', err);
-											// return collItemCallback(err, null);
-										} else {
-											amount = result[0].$1;
-										}
-										let size = getSampleDocSize(amount, connectionInfo.recordSamplingSettings) || 1000;
-										logger.log('info', { collectionItem: collectionItem }, 'Getting documents for current collectionItem', connectionInfo.hiddenKeys);
-
-										listDocuments(collection._self, size, (err, documents) => {
-											if(err){
-												console.log(err);
-												logger.log('error', err);
-												return collItemCallback(err, null);
-											} else {
-												documents  = filterDocuments(documents);
-
-												let inferSchema = generateCustomInferSchema(collectionItem.id, documents, { sampleSize: 20 });
-												let documentsPackage = getDocumentKindDataFromInfer({ bucketName: collectionItem.id,
-													inference: inferSchema, isCustomInfer: true, excludeDocKind: connectionInfo.excludeDocKind }, 90);
-
-												return collItemCallback(err, documentsPackage);
-											}
-										});
-									});
-								}
-							});
-						}, (err, items) => {
-							if(err){
-								logger.log('error', err);
-								console.log(err);
-							}
-							return cb(err, items);
-						});
+						dbs = dbs.map(item => item.name);
+						logger.log('info', dbs, 'All databases list', connectionInfo.hiddenKeys);
+						return cb(err, dbs);
 					}
 				});
 			}
 		});
 	},
 
+	getDocumentKinds: function(connectionInfo, logger, cb) {
+		logger.log('info', ["getDocumentKinds"], 'Where is');
+		logger.log('info', connectionInfo, 'Reverse-Engineering connection settings', connectionInfo.hiddenKeys);
+		this.connect(connectionInfo, logger, (err, connection) => {
+			if (err) {
+				logger.log('error', err);
+				console.log(err);
+			} else {
+				const db = connection.db(connectionInfo.database);
+			
+				db.listCollections().toArray((err, collections) => {
+					if (err) {
+						logger.log('error', err);
+						cb(err);
+					} else {
+						async.map(collections, (collection, collItemCallback) => {
+							const size = +getSampleDocSize(1000, connectionInfo.recordSamplingSettings) || 1000;
+							logger.log('info', {'name': collection.name, 'size': size}, 'Collection name');
+
+							db.collection(collection.name).find().limit(size).toArray((err, documents) => {
+								if(err){
+									logger.log('error', err);
+									return collItemCallback(err, null);
+								} else {
+									logger.log('info', documents, 'Documents');
+									documents  = filterDocuments(documents);
+									let inferSchema = generateCustomInferSchema(collection.name, documents, { sampleSize: 20 });
+									let documentsPackage = getDocumentKindDataFromInfer({ 
+										bucketName: collection.name,
+										inference: inferSchema, 
+										isCustomInfer: true, 
+										excludeDocKind: connectionInfo.excludeDocKind 
+									}, 90);
+
+									return collItemCallback(err, documentsPackage);
+								}
+							});
+						}, (err, items) => {
+							if(err){
+								logger.log('error', err);
+							}
+							return cb(err, items);
+						});
+					}
+				});
+			}
+			
+		});
+	},
+
 	getDbCollectionsNames: function(connectionInfo, logger, cb) {
-		client = setUpDocumentClient(connectionInfo);
+		logger.log('info', ["getDbCollectionsNames"], 'Where is');
 		logger.log('info', connectionInfo, 'Reverse-Engineering connection settings', connectionInfo.hiddenKeys);
 
-		readDatabaseById(connectionInfo.database, (err, database) => {
-			if(err){
-				console.log(err);
+		this.connect(connectionInfo, logger, (err, connection) => {
+			if (err) {
 				logger.log('error', err);
-				return cb(err)
 			} else {
-				logger.log('info', { Database: database.id }, 'Getting collections list for current database', connectionInfo.hiddenKeys);
-				listCollections(database._self, (err, collections) => {
+				const db = connection.db(connectionInfo.database);
+				db.listCollections().toArray((err, collections) => {
 					if(err){
-						console.log(err);
 						logger.log('error', err);
 						return cb(err)
 					} else {
-						let collectionNames = collections.map(item => item.id);
-						logger.log('info', { CollectionList: collections }, 'Collection list for current database', connectionInfo.hiddenKeys);
-						handleBucket(connectionInfo, collectionNames, database, cb);
+						let collectionNames = collections.map(item => item.name);
+						logger.log('info', collectionNames, "Collection names");
+						handleBucket(connectionInfo, collectionNames, db, cb);
 					}
 				});
 			}
@@ -146,7 +137,9 @@ module.exports = {
 	},
 
 	getDbCollectionsData: function(data, logger, cb){
-		client = setUpDocumentClient(data);
+		logger.log('info', ["getDbCollectionsData"], 'Where is');
+		//this.getDatabases(connectionInfo, logger, cb);
+		/*client = setUpDocumentClient(data);
 		logger.log('info', data, 'Reverse-Engineering connection settings', data.hiddenKeys);
 
 		let includeEmptyCollection = data.includeEmptyCollection;
@@ -279,12 +272,13 @@ module.exports = {
 				})
 
 			}
-		});
+		});*/
 	}
 };
 
 
 function readCollectionById(dbLink, collectionId, callback) {
+	this.getDatabases(connectionInfo, logger, cb);
 	var collLink = `dbs/${dbLink}/colls/${collectionId}`;
 
 	client.readCollection(collLink, function (err, coll) {
@@ -319,33 +313,17 @@ function getOfferType(collection, callback) {
 	});
 }
 
-function listDatabases(callback) {
-	var queryIterator = client.readDatabases().toArray(function (err, dbs) {
+function listDatabases(connection, callback) {
+	connection.admin().listDatabases((err, dbs) => {
 		if (err) {
-			return callback(err);
+			callback(err);
+		} else {
+			callback(null, dbs.databases);
 		}
-		return callback(null, dbs);
 	});
 }
 
 function listCollections(databaseLink, callback) {
-	var queryIterator = client.readCollections(databaseLink).toArray(function (err, cols) {
-		if (err) {
-			return callback(err);
-		} else {            
-			return callback(null, cols);
-		}
-	});
-}
-
-function readDatabaseById(databaseId, callback) {
-	client.readDatabase('dbs/' + databaseId, function (err, db) {
-		if (err) {
-			return callback(err);
-		} else {
-			return callback(null, db);
-		}
-	});
 }
 
 function listDocuments(collLink, maxItemCount, callback) {
@@ -376,56 +354,92 @@ function documentsAmount(collLink, callback) {
 	});
 }
 
-function filterDocuments(documents){
-	return documents.map(item =>{
-		for(let prop in item){
-			if(prop && prop[0] === '_'){
-				delete item[prop];
-			}
-		}
-		return item;
-	});
-}
+function getIndexes(indexingPolicy){
+	let generalIndexes = [];
+	
+	if(indexingPolicy){
+		indexingPolicy.includedPaths.forEach(item => {
+			let indexes = item.indexes;
+			indexes = indexes.map((index, i) => {
+				index.name = `New Index(${i+1})`,
+				index.indexPrecision = index.precision;
+				index.automatic = item.automatic;
+				index.mode = indexingPolicy.indexingMode;
+				index.indexIncludedPath = item.path;
+				return index;
+			});
 
-function generateCustomInferSchema(bucketName, documents, params){
-	function typeOf(obj) {
-		return {}.toString.call(obj).split(' ')[1].slice(0, -1).toLowerCase();
-	};
-
-	let sampleSize = params.sampleSize || 30;
-
-	let inferSchema = {
-		"#docs": 0,
-		"$schema": "http://json-schema.org/schema#",
-		"properties": {}
-	};
-
-	documents.forEach(item => {
-		inferSchema["#docs"]++;
-		
-		for(let prop in item){
-			if(inferSchema.properties.hasOwnProperty(prop)){
-				inferSchema.properties[prop]["#docs"]++;
-				inferSchema.properties[prop]["samples"].indexOf(item[prop]) === -1 && inferSchema.properties[prop]["samples"].length < sampleSize? inferSchema.properties[prop]["samples"].push(item[prop]) : '';
-				inferSchema.properties[prop]["type"] = typeOf(item[prop]);
-			} else {
-				inferSchema.properties[prop] = {
-					"#docs": 1,
-					"%docs": 100,
-					"samples": [item[prop]],
-					"type": typeOf(item[prop])
-				}
-			}
-		}
-	});
-
-	for (let prop in inferSchema.properties){
-		inferSchema.properties[prop]["%docs"] = Math.round((inferSchema.properties[prop]["#docs"] / inferSchema["#docs"] * 100), 2);
+			generalIndexes = generalIndexes.concat(generalIndexes, indexes);
+		});
 	}
-	return inferSchema;
+
+	return generalIndexes;
 }
 
-function getDocumentKindDataFromInfer(data, probability){
+function getSamplingInfo(recordSamplingSettings, fieldInference){
+	let samplingInfo = {};
+	let value = recordSamplingSettings[recordSamplingSettings.active].value;
+	let unit = (recordSamplingSettings.active === 'relative') ? '%' : ' records max';
+	samplingInfo.recordSampling = `${recordSamplingSettings.active} ${value}${unit}`
+	samplingInfo.fieldInference = (fieldInference.active === 'field') ? 'keep field order' : 'alphabetical order';
+	return samplingInfo;
+}
+
+function getEndpoint(data){
+	return data.host + ':' + data.port;
+}
+
+function setUpDocumentClient(connectionInfo, logger){
+	let endpoint = getEndpoint(connectionInfo);
+	let connectionPolicy = new documentBase.ConnectionPolicy();
+	logger.log("info", [endpoint, connectionPolicy]);
+	connectionPolicy.DisableSSLVerification = connectionInfo.disableSSL;
+	return new documentClient(endpoint, { "masterKey": connectionInfo.accountKey }, connectionPolicy);
+}
+
+// -------------------------------------------------- //
+
+function handleBucket(connectionInfo, collectionNames, database, dbItemCallback){
+	async.map(collectionNames, (collectionName, collItemCallback) => {
+		const size = +getSampleDocSize(1000, connectionInfo.recordSamplingSettings) || 1000;		
+		
+		database.collection(collectionName).find().limit(size).toArray((err, documents) => {
+			if(err){
+				return collItemCallback(err);
+			} else {
+				documents  = filterDocuments(documents);
+				let documentKind = connectionInfo.documentKinds[collectionName].documentKindName || '*';
+				let documentTypes = [];
+
+				if(documentKind !== '*'){
+					documentTypes = documents.map(function(doc){
+						return doc[documentKind];
+					});
+					documentTypes = documentTypes.filter((item) => Boolean(item));
+					documentTypes = _.uniq(documentTypes);
+				}
+
+				let dataItem = prepareConnectionDataItem(documentTypes, collectionName, database);
+				return collItemCallback(err, dataItem);
+			}
+		});
+	}, (err, items) => {
+		return dbItemCallback(err, items);
+	});
+}
+
+function prepareConnectionDataItem(documentTypes, bucketName, database){
+	let uniqueDocuments = _.uniq(documentTypes);
+	let connectionDataItem = {
+		dbName: bucketName,
+		dbCollections: uniqueDocuments
+	};
+
+	return connectionDataItem;
+}
+
+
+function getDocumentKindDataFromInfer(data, probability) {
 	let suggestedDocKinds = [];
 	let otherDocKinds = [];
 	let documentKind = {
@@ -472,113 +486,67 @@ function getDocumentKindDataFromInfer(data, probability){
 	return documentKindData;
 }
 
-function handleBucket(connectionInfo, collectionNames, database, dbItemCallback){
-	async.map(collectionNames, (collectionName, collItemCallback) => {
-		readCollectionById(database.id, collectionName, (err, collection) => {
-			if(err){
-				console.log(err);
-				logger.log('error', err);
-				collItemCallback(err);
-			} else {
-				let amount = 1000;
-				documentsAmount(collection._self, (err, result) => {
-					if(err){
-						// console.log(err);
-						// logger.log('error', err);
-						// return collItemCallback(err, null);
-					} else {
-						amount = result[0].$1;
-					}
-					let size = getSampleDocSize(amount, connectionInfo.recordSamplingSettings) || 1000;
-
-					listDocuments(collection._self, size, (err, documents) => {
-						if(err){
-							console.log(err);
-							return collItemCallback(err);
-						} else {
-							documents  = filterDocuments(documents);
-							let documentKind = connectionInfo.documentKinds[collection.id].documentKindName || '*';
-							let documentTypes = [];
-
-							if(documentKind !== '*'){
-								documentTypes = documents.map(function(doc){
-									return doc[documentKind];
-								});
-								documentTypes = documentTypes.filter((item) => Boolean(item));
-								documentTypes = _.uniq(documentTypes);
-							}
-
-							let dataItem = prepareConnectionDataItem(documentTypes, collection.id, database);
-							return collItemCallback(err, dataItem);
-						}
-					});
-				});
-			}
-		});
-	}, (err, items) => {
-		if(err){
-			console.log(err);
-			logger.log('error', err);
-		}
-		return dbItemCallback(err, items);
-	});
-}
-
-function prepareConnectionDataItem(documentTypes, bucketName, database){
-	let uniqueDocuments = _.uniq(documentTypes);
-	let connectionDataItem = {
-		dbName: bucketName,
-		dbCollections: uniqueDocuments
+function generateCustomInferSchema(bucketName, documents, params){
+	function typeOf(obj) {
+		return {}.toString.call(obj).split(' ')[1].slice(0, -1).toLowerCase();
 	};
 
-	return connectionDataItem;
+	let sampleSize = params.sampleSize || 30;
+
+	let inferSchema = {
+		"#docs": 0,
+		"$schema": "http://json-schema.org/schema#",
+		"properties": {}
+	};
+
+	documents.forEach(item => {
+		inferSchema["#docs"]++;
+		
+		for(let prop in item){
+			if(inferSchema.properties.hasOwnProperty(prop)){
+				inferSchema.properties[prop]["#docs"]++;
+				inferSchema.properties[prop]["samples"].indexOf(item[prop]) === -1 && inferSchema.properties[prop]["samples"].length < sampleSize? inferSchema.properties[prop]["samples"].push(item[prop]) : '';
+				inferSchema.properties[prop]["type"] = typeOf(item[prop]);
+			} else {
+				inferSchema.properties[prop] = {
+					"#docs": 1,
+					"%docs": 100,
+					"samples": [item[prop]],
+					"type": typeOf(item[prop])
+				}
+			}
+		}
+	});
+
+	for (let prop in inferSchema.properties){
+		inferSchema.properties[prop]["%docs"] = Math.round((inferSchema.properties[prop]["#docs"] / inferSchema["#docs"] * 100), 2);
+	}
+	return inferSchema;
+}
+
+function filterDocuments(documents){
+	return documents.map(item =>{
+		for(let prop in item) {
+			if(prop && prop[0] === '_') {
+				delete item[prop];
+			}
+		}
+		return item;
+	});
 }
 
 function getSampleDocSize(count, recordSamplingSettings) {
 	let per = recordSamplingSettings.relative.value;
 	return (recordSamplingSettings.active === 'absolute')
 		? recordSamplingSettings.absolute.value
-			: Math.round( count/100 * per);
+		: Math.round( count/100 * per);
 }
 
-function getIndexes(indexingPolicy){
-	let generalIndexes = [];
-	
-	if(indexingPolicy){
-		indexingPolicy.includedPaths.forEach(item => {
-			let indexes = item.indexes;
-			indexes = indexes.map((index, i) => {
-				index.name = `New Index(${i+1})`,
-				index.indexPrecision = index.precision;
-				index.automatic = item.automatic;
-				index.mode = indexingPolicy.indexingMode;
-				index.indexIncludedPath = item.path;
-				return index;
-			});
-
-			generalIndexes = generalIndexes.concat(generalIndexes, indexes);
-		});
-	}
-
-	return generalIndexes;
-}
-
-function getSamplingInfo(recordSamplingSettings, fieldInference){
-	let samplingInfo = {};
-	let value = recordSamplingSettings[recordSamplingSettings.active].value;
-	let unit = (recordSamplingSettings.active === 'relative') ? '%' : ' records max';
-	samplingInfo.recordSampling = `${recordSamplingSettings.active} ${value}${unit}`
-	samplingInfo.fieldInference = (fieldInference.active === 'field') ? 'keep field order' : 'alphabetical order';
-	return samplingInfo;
-}
-
-function getEndpoint(data){
-	return data.host + ':' + data.port;
-}
-
-function setUpDocumentClient(connectionInfo){
-	let endpoint = getEndpoint(connectionInfo);
-	let connectionPolicy = new documentBase.ConnectionPolicy();
-	connectionPolicy.DisableSSLVerification = connectionInfo.disableSSL;
-	return new documentClient(endpoint, { "masterKey": connectionInfo.accountKey }, connectionPolicy);
+function generateConnectionParams(connectionInfo, logger, cb){
+	cb({
+		url: `mongodb://${connectionInfo.userName}:${connectionInfo.accountKey}@${connectionInfo.host}:${connectionInfo.port}`,
+		options: {
+			ssl: connectionInfo.ssl === 'true'
+		}
+	});
 }
