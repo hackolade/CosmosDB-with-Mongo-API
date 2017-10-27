@@ -353,7 +353,6 @@ function prepareConnectionDataItem(documentTypes, bucketName, database){
 	return connectionDataItem;
 }
 
-
 function getDocumentKindDataFromInfer(data, probability) {
 	let suggestedDocKinds = [];
 	let otherDocKinds = [];
@@ -469,7 +468,7 @@ function generateConnectionParams(connectionInfo, logger, cb){
 	cb({
 		url: `mongodb://${connectionInfo.userName}:${connectionInfo.accountKey}@${connectionInfo.host}:${connectionInfo.port}`,
 		options: {
-			ssl: connectionInfo.ssl === 'true'
+			ssl: connectionInfo.disableSSL !== true
 		}
 	});
 }
