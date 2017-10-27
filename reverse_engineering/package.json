@@ -5,11 +5,6 @@
   "author": "Hackolade",
   "dependencies": {
     "async": "^2.5.0",
-    "documentdb": "^1.12.2",
-    "mongodb": "^2.2.25",
-    "mongodb-collection-sample": "^1.2.0",
-    "mongodb-connection-model": "^9.0.0",
-    "mongodb-schema": "^4.2.0",
-    "mongodb-uri": "^0.9.7"
+    "mongodb": "^2.2.25"
   }
 }

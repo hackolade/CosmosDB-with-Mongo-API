@@ -1,24 +1,13 @@
 'use strict';
 
-const documentClient = require("documentdb").DocumentClient;
-const lib = require("./node_modules/documentdb/lib/");
-const documentBase = lib.DocumentBase;
-
 const async = require('async');
 const _ = require('lodash');
 const MongoClient = require('mongodb').MongoClient;
-const ReadPreference = require('mongodb').ReadPreference;
-const readPreference = new ReadPreference('secondaryPreferred');
-const mongodbSample = require('mongodb-collection-sample');
-const mongodb = require('mongodb');
-const mongodbUri = require('mongodb-uri');
-const Connection = require('mongodb-connection-model');
-const Connect = require('mongodb-connection-model').connect;
 const fs = require('fs');
-var client;
 
 module.exports = {
 	connect: function(connectionInfo, logger, cb){
+		logger.clear();
 		logger.log('info', connectionInfo, 'Reverse-Engineering connection settings', connectionInfo.hiddenKeys);
 		
 		generateConnectionParams(connectionInfo, logger, params => {
@@ -38,24 +27,31 @@ module.exports = {
 	},
 
 	testConnection: function(connectionInfo, logger, cb){
-		this.connect(connectionInfo, logger, (err, result) => cb(err !== null));
+		this.connect(connectionInfo, logger, (err, result) => {
+			if (err) {
+				cb(true);
+			} else {
+				cb(false);
+				result.close();
+			}
+		});
 	},
 
 	getDatabases: function(connectionInfo, logger, cb){
-		logger.log('info', ["getDatabases"], 'Where is');
-		logger.log('info', connectionInfo, 'Reverse-Engineering connection settings', connectionInfo.hiddenKeys);
 		this.connect(connectionInfo, logger, (err, connection) => {
 			if (err) {
 				logger.log('error', err);
 				return cb(err);
 			} else {
-				listDatabases(connection, (err, dbs) => {
-					if(err){
+				connection.admin().listDatabases((err, dbs) => {
+					if(err) {
 						logger.log('error', err);
+						connection.close();
 						return cb(err);
 					} else {
-						dbs = dbs.map(item => item.name);
+						dbs = dbs.databases.map(item => item.name);
 						logger.log('info', dbs, 'All databases list', connectionInfo.hiddenKeys);
+						connection.close();
 						return cb(err, dbs);
 					}
 				});
@@ -64,72 +60,96 @@ module.exports = {
 	},
 
 	getDocumentKinds: function(connectionInfo, logger, cb) {
-		logger.log('info', ["getDocumentKinds"], 'Where is');
-		logger.log('info', connectionInfo, 'Reverse-Engineering connection settings', connectionInfo.hiddenKeys);
 		this.connect(connectionInfo, logger, (err, connection) => {
 			if (err) {
 				logger.log('error', err);
 				console.log(err);
 			} else {
 				const db = connection.db(connectionInfo.database);
-			
+				
+				if (!db) {
+					connection.close();
+					return cb(`Failed connection to database ${connectionInfo.database}`);
+				}
+
 				db.listCollections().toArray((err, collections) => {
 					if (err) {
 						logger.log('error', err);
+						connection.close();
 						cb(err);
 					} else {
-						async.map(collections, (collection, collItemCallback) => {
-							const size = +getSampleDocSize(1000, connectionInfo.recordSamplingSettings) || 1000;
-							logger.log('info', {'name': collection.name, 'size': size}, 'Collection name');
+						collections = filterCollections(collections);
+						logger.log('info', collections, 'Mapped collection list');
 
-							db.collection(collection.name).find().limit(size).toArray((err, documents) => {
-								if(err){
-									logger.log('error', err);
-									return collItemCallback(err, null);
-								} else {
-									logger.log('info', documents, 'Documents');
-									documents  = filterDocuments(documents);
-									let inferSchema = generateCustomInferSchema(collection.name, documents, { sampleSize: 20 });
-									let documentsPackage = getDocumentKindDataFromInfer({ 
-										bucketName: collection.name,
-										inference: inferSchema, 
-										isCustomInfer: true, 
-										excludeDocKind: connectionInfo.excludeDocKind 
-									}, 90);
+						async.map(collections, (collectionData, collItemCallback) => {
+							const collection = db.collection(collectionData.name);
 
-									return collItemCallback(err, documentsPackage);
-								}
+							collection.count((err, count) => {
+								const amount = !err && count > 0 ? count : 1000;
+								const size = +getSampleDocSize(amount, connectionInfo.recordSamplingSettings) || 1000;
+								
+								collection.find().limit(size).toArray((err, documents) => {
+									if(err){
+										logger.log('error', err);
+										return collItemCallback(err, null);
+									} else {
+										logger.log('info', { collectionItem: collectionData.name }, 'Getting documents for current collectionItem', connectionInfo.hiddenKeys);
+										
+										documents  = filterDocuments(documents);
+										let inferSchema = generateCustomInferSchema(collectionData.name, documents, { sampleSize: 20 });
+										let documentsPackage = getDocumentKindDataFromInfer({ 
+											bucketName: collectionData.name,
+											inference: inferSchema, 
+											isCustomInfer: true, 
+											excludeDocKind: connectionInfo.excludeDocKind 
+										}, 90);
+
+										return collItemCallback(err, documentsPackage);
+									}
+								});
 							});
 						}, (err, items) => {
 							if(err){
 								logger.log('error', err);
 							}
+
+							connection.close();		
 							return cb(err, items);
 						});
 					}
 				});
-			}
-			
+			}			
 		});
 	},
 
 	getDbCollectionsNames: function(connectionInfo, logger, cb) {
-		logger.log('info', ["getDbCollectionsNames"], 'Where is');
-		logger.log('info', connectionInfo, 'Reverse-Engineering connection settings', connectionInfo.hiddenKeys);
-
 		this.connect(connectionInfo, logger, (err, connection) => {
 			if (err) {
 				logger.log('error', err);
+				return cb(err)
 			} else {
 				const db = connection.db(connectionInfo.database);
+				
+				if (!db) {
+					connection.close();
+					return cb(`Failed connection to database ${connectionInfo.database}`);
+				}
+
+				logger.log('info', { Database: connectionInfo.database }, 'Getting collections list for current database', connectionInfo.hiddenKeys);
+				
 				db.listCollections().toArray((err, collections) => {
 					if(err){
 						logger.log('error', err);
+						connection.close();
 						return cb(err)
 					} else {
-						let collectionNames = collections.map(item => item.name);
-						logger.log('info', collectionNames, "Collection names");
-						handleBucket(connectionInfo, collectionNames, db, cb);
+						let collectionNames = filterCollections(collections).map(item => item.name);
+						logger.log('info', collectionNames, "Collection list for current database", connectionInfo.hiddenKeys);
+						handleBucket(connectionInfo, collectionNames, db, function () {
+							connection.close();
+
+							cb.apply(this, arguments);
+						});
 					}
 				});
 			}
@@ -137,11 +157,6 @@ module.exports = {
 	},
 
 	getDbCollectionsData: function(data, logger, cb){
-		logger.log('info', ["getDbCollectionsData"], 'Where is');
-		//this.getDatabases(connectionInfo, logger, cb);
-		/*client = setUpDocumentClient(data);
-		logger.log('info', data, 'Reverse-Engineering connection settings', data.hiddenKeys);
-
 		let includeEmptyCollection = data.includeEmptyCollection;
 		let { recordSamplingSettings, fieldInference } = data;
 		logger.log('info', getSamplingInfo(recordSamplingSettings, fieldInference), 'Reverse-Engineering sampling params', data.hiddenKeys);
@@ -150,231 +165,138 @@ module.exports = {
 
 		logger.log('info', { CollectionList: bucketList }, 'Selected collection list', data.hiddenKeys);
 
-		readDatabaseById(data.database, (err, database) => {
-			if(err){
-				console.log(err);
+		this.connect(data, logger, (err, connection) => {
+			if (err) {
 				logger.log('error', err);
-				return cb(err)
+				return cb(err);
 			} else {
+				const db = connection.db(data.database);
+
+				if (!db) {
+					connection.close();
+					let error = `Failed connection to database ${connectionInfo.database}`;
+					logger.log('error', error);
+					return cb(error);
+				}
+
 				let modelInfo = {
-					dbId: database.id,
-					accountID: data.accountKey
+					dbId: data.database,
+					accountID: data.accountKey,
+					version: []
 				};
 
-				client.getDatabaseAccount((err, accountInfo, accountInfo2) => {
+				db.admin().buildInfo((err, version) => {
+					if (err) {
+						modelInfo.version = info.versionArray;
+					}
+				});
+
+				async.map(bucketList, (bucketName, collItemCallback) => {
+					const collection = db.collection(bucketName);
+					const bucketInfo = {};
+					
+					collection.indexes(function(err, collecctionIndexes){
+						if (err){
+							logger.log('error', err);
+							return collectionItemCallback(err, null);
+						} else {
+							const indexes = collecctionIndexes.filter(index => {
+								delete index.ns;
+								delete index.v;
+								return  index.name;
+							});
+
+							collection.count((err, count) => {
+								// self.setProgress({modelName: dbName, collectionName: collectionName, process: 'get data from database'});
+								const amount = !err && count > 0 ? count : 1000;
+								const size = +getSampleDocSize(amount, recordSamplingSettings) || 1000;	
+
+								collection.find().limit(size).toArray((err, documents) => {
+									if(err) {
+										logger.log('error', err);
+										return collItemCallback(err, null);
+									} else {
+										documents  = filterDocuments(documents);
+										let documentKindName = data.documentKinds[bucketName].documentKindName || '*';
+										let docKindsList = data.collectionData.collections[bucketName];
+										let collectionPackages = [];										
+
+										if (documentKindName !== '*') {
+											if(!docKindsList) {
+												let documentsPackage = {
+													dbName: bucketName,
+													emptyBucket: true,
+													indexes: [],
+													bucketIndexes: indexes,
+													views: [],
+													validation: false,
+													bucketInfo
+												};
+
+												collectionPackages.push(documentsPackage)
+											} else {
+												docKindsList.forEach(docKindItem => {
+													let newArrayDocuments = documents.filter((item) => {
+														return item[documentKindName] === docKindItem;
+													});
+
+													let documentsPackage = {
+														dbName: bucketName,
+														collectionName: docKindItem,
+														documents: newArrayDocuments || [],
+														indexes: [],
+														bucketIndexes: indexes,
+														views: [],
+														validation: false,
+														docType: documentKindName,
+														bucketInfo
+													};
+
+													if(fieldInference.active === 'field') {
+														documentsPackage.documentTemplate = documents[0] || null;
+													}
+
+													collectionPackages.push(documentsPackage)
+												});
+											}
+										} else {
+											let documentsPackage = {
+												dbName: bucketName,
+												collectionName: bucketName,
+												documents: documents || [],
+												indexes: [],
+												bucketIndexes: indexes,
+												views: [],
+												validation: false,
+												docType: bucketName,
+												bucketInfo
+											};
+
+											if(fieldInference.active === 'field'){
+												documentsPackage.documentTemplate = documents[0] || null;
+											}
+
+											collectionPackages.push(documentsPackage)
+										}
+
+										return collItemCallback(err, collectionPackages);
+									}
+								});
+							});
+						}
+					});
+				}, (err, items) => {
 					if(err){
 						console.log(err);
 						logger.log('error', err);
-					} else{
-						modelInfo.defaultConsistency = accountInfo.ConsistencyPolicy.defaultConsistencyLevel;
-						modelInfo.preferredLocation = (accountInfo.WritableLocations[0]) ? accountInfo.WritableLocations[0].name : '';
-
-						logger.log('info', modelInfo, 'Model info', data.hiddenKeys);
-
-						async.map(bucketList, (bucketName, collItemCallback) => {
-							readCollectionById(database.id, bucketName, (err, collection) => {
-								if(err){
-									console.log(err);
-									logger.log('error', err);
-									return collItemCallback(err);
-								} else {
-									getOfferType(collection, (err, info) => {
-										if(err){
-											console.log(err);
-											logger.log('error', err);
-											return collItemCallback(err);
-										} else {
-											let bucketInfo = {
-												throughput: info.content.offerThroughput,
-												rump: info.content.offerIsRUPerMinuteThroughputEnabled ? 'OFF' : 'On'
-		 									};
-
-		 									let indexes = getIndexes(collection.indexingPolicy);
-
-		 									let amount = 1000;
-		 									documentsAmount(collection._self, (err, result) => {
-		 										if(err){
-		 											// console.log(err);
-		 											// logger.log('error', err);
-		 											// return collItemCallback(err, null);
-		 										} else {
-		 											amount = result[0].$1;
-		 										}
-	 											let size = getSampleDocSize(amount, recordSamplingSettings) || 1000;
-
-												listDocuments(collection._self, size, (err, documents) => {
-													if(err){
-														console.log(err);
-														logger.log('error', err);
-														return collItemCallback(err);
-													} else {
-														documents = filterDocuments(documents);
-														let documentKindName = data.documentKinds[collection.id].documentKindName || '*';
-														let docKindsList = data.collectionData.collections[bucketName];
-														let collectionPackages = [];
-
-														if(documentKindName !== '*'){
-															if(!docKindsList){
-																let documentsPackage = {
-																	dbName: bucketName,
-																	emptyBucket: true,
-																	indexes: [],
-																	bucketIndexes: indexes,
-																	views: [],
-																	validation: false,
-																	bucketInfo
-																};
-																collectionPackages.push(documentsPackage)
-															} else {
-																docKindsList.forEach(docKindItem => {
-																	let newArrayDocuments = documents.filter((item) => {
-																		return item[documentKindName] === docKindItem;
-																	});
-
-																	let documentsPackage = {
-																		dbName: bucketName,
-																		collectionName: docKindItem,
-																		documents: newArrayDocuments || [],
-																		indexes: [],
-																		bucketIndexes: indexes,
-																		views: [],
-																		validation: false,
-																		docType: documentKindName,
-																		bucketInfo
-																	};
-
-																	if(fieldInference.active === 'field'){
-																		documentsPackage.documentTemplate = documents[0] || null;
-																	}
-
-																	collectionPackages.push(documentsPackage)
-																});
-															}
-														}
-
-														return collItemCallback(err, collectionPackages);
-													}
-												});
-		 									});
-
-										}
-									})
-								}
-							});
-						}, (err, items) => {
-							if(err){
-								console.log(err);
-								logger.log('error', err);
-							}
-							return cb(err, items, modelInfo);
-						});
 					}
-				})
-
+					connection.close();
+					return cb(err, items, modelInfo);
+				});
 			}
-		});*/
-	}
-};
-
-
-function readCollectionById(dbLink, collectionId, callback) {
-	this.getDatabases(connectionInfo, logger, cb);
-	var collLink = `dbs/${dbLink}/colls/${collectionId}`;
-
-	client.readCollection(collLink, function (err, coll) {
-		if (err) {
-			return callback(err);
-		} else {
-			return callback(null, coll);
-		}
-	});
-}
-
-function getOfferType(collection, callback) {
-	var querySpec = {
-		query: 'SELECT * FROM root r WHERE  r.resource = @link',
-		parameters: [
-			{
-				name: '@link',
-				value: collection._self
-			}
-		]
-	};
-
-	client.queryOffers(querySpec).toArray(function (err, offers) {
-		if (err) {
-			return callback(err);
-		} else if (offers.length === 0) {
-			return callback('No offer found for collection');
-		} else {
-			var offer = offers[0];
-			return callback(null, offer);
-		}
-	});
-}
-
-function listDatabases(connection, callback) {
-	connection.admin().listDatabases((err, dbs) => {
-		if (err) {
-			callback(err);
-		} else {
-			callback(null, dbs.databases);
-		}
-	});
-}
-
-function listCollections(databaseLink, callback) {
-}
-
-function listDocuments(collLink, maxItemCount, callback) {
-	const query = {
-		"query": `SELECT TOP ${maxItemCount} * FROM c`
-	};
-
-	var queryIterator = client.queryDocuments(collLink, query, { enableCrossPartitionQuery: true }).toArray(function (err, docs) {
-		if (err) {
-			return callback(err);
-		} else {
-			return callback(null, docs);
-		}
-	});
-}
-
-function documentsAmount(collLink, callback) {
-	const query = {
-			"query": `SELECT COUNT(1) FROM c`
-	};
-
-	var queryIterator = client.queryDocuments(collLink, query, { enableCrossPartitionQuery: true }).toArray(function (err, docs) {
-		if (err) {
-			return callback(err);
-		} else {
-			return callback(null, docs);
-		}
-	});
-}
-
-function getIndexes(indexingPolicy){
-	let generalIndexes = [];
-	
-	if(indexingPolicy){
-		indexingPolicy.includedPaths.forEach(item => {
-			let indexes = item.indexes;
-			indexes = indexes.map((index, i) => {
-				index.name = `New Index(${i+1})`,
-				index.indexPrecision = index.precision;
-				index.automatic = item.automatic;
-				index.mode = indexingPolicy.indexingMode;
-				index.indexIncludedPath = item.path;
-				return index;
-			});
-
-			generalIndexes = generalIndexes.concat(generalIndexes, indexes);
 		});
 	}
-
-	return generalIndexes;
-}
+};
 
 function getSamplingInfo(recordSamplingSettings, fieldInference){
 	let samplingInfo = {};
@@ -385,43 +307,37 @@ function getSamplingInfo(recordSamplingSettings, fieldInference){
 	return samplingInfo;
 }
 
-function getEndpoint(data){
-	return data.host + ':' + data.port;
-}
-
-function setUpDocumentClient(connectionInfo, logger){
-	let endpoint = getEndpoint(connectionInfo);
-	let connectionPolicy = new documentBase.ConnectionPolicy();
-	logger.log("info", [endpoint, connectionPolicy]);
-	connectionPolicy.DisableSSLVerification = connectionInfo.disableSSL;
-	return new documentClient(endpoint, { "masterKey": connectionInfo.accountKey }, connectionPolicy);
-}
-
-// -------------------------------------------------- //
-
 function handleBucket(connectionInfo, collectionNames, database, dbItemCallback){
 	async.map(collectionNames, (collectionName, collItemCallback) => {
-		const size = +getSampleDocSize(1000, connectionInfo.recordSamplingSettings) || 1000;		
+		const collection = database.collection(collectionName);
+		if (!collection) {
+			return collItemCallback(`Failed got collection ${collectionName}`);
+		}
+
+		collection.count((err, count) => {
+			const amount = !err && count > 0 ? count : 1000;
+			const size = +getSampleDocSize(amount, connectionInfo.recordSamplingSettings) || 1000;		
 		
-		database.collection(collectionName).find().limit(size).toArray((err, documents) => {
-			if(err){
-				return collItemCallback(err);
-			} else {
-				documents  = filterDocuments(documents);
-				let documentKind = connectionInfo.documentKinds[collectionName].documentKindName || '*';
-				let documentTypes = [];
+			collection.find().limit(size).toArray((err, documents) => {
+				if(err){
+					return collItemCallback(err);
+				} else {
+					documents  = filterDocuments(documents);
+					let documentKind = connectionInfo.documentKinds[collectionName].documentKindName || '*';
+					let documentTypes = [];
 
-				if(documentKind !== '*'){
-					documentTypes = documents.map(function(doc){
-						return doc[documentKind];
-					});
-					documentTypes = documentTypes.filter((item) => Boolean(item));
-					documentTypes = _.uniq(documentTypes);
+					if (documentKind !== '*') {
+						documentTypes = documents.map(function(doc){
+							return doc[documentKind];
+						});
+						documentTypes = documentTypes.filter((item) => Boolean(item));
+						documentTypes = _.uniq(documentTypes);
+					}
+
+					let dataItem = prepareConnectionDataItem(documentTypes, collectionName, database);
+					return collItemCallback(err, dataItem);
 				}
-
-				let dataItem = prepareConnectionDataItem(documentTypes, collectionName, database);
-				return collItemCallback(err, dataItem);
-			}
+			});
 		});
 	}, (err, items) => {
 		return dbItemCallback(err, items);
@@ -533,6 +449,12 @@ function filterDocuments(documents){
 		}
 		return item;
 	});
+}
+
+function filterCollections(collections) {
+	const listExcludedCollections = ["system.indexes"];
+
+	return collections.filter((c) => listExcludedCollections.indexOf(c.name) === -1);
 }
 
 function getSampleDocSize(count, recordSamplingSettings) {
