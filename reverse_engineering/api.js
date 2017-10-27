@@ -78,7 +78,7 @@ module.exports = {
 						connection.close();
 						cb(err);
 					} else {
-						collections = filterCollections(collections);
+						collections = connectionInfo.includeSystemCollection ? collections : filterSystemCollections(collections);
 						logger.log('info', collections, 'Mapped collection list');
 
 						async.map(collections, (collectionData, collItemCallback) => {
@@ -143,7 +143,7 @@ module.exports = {
 						connection.close();
 						return cb(err)
 					} else {
-						let collectionNames = filterCollections(collections).map(item => item.name);
+						let collectionNames = (connectionInfo.includeSystemCollection ? collections : filterSystemCollections(collections)).map(item => item.name);
 						logger.log('info', collectionNames, "Collection list for current database", connectionInfo.hiddenKeys);
 						handleBucket(connectionInfo, collectionNames, db, function () {
 							connection.close();
@@ -451,7 +451,7 @@ function filterDocuments(documents){
 	});
 }
 
-function filterCollections(collections) {
+function filterSystemCollections(collections) {
 	const listExcludedCollections = ["system.indexes"];
 
 	return collections.filter((collection) => {
