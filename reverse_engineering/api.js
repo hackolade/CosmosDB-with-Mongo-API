@@ -454,7 +454,9 @@ function filterDocuments(documents){
 function filterCollections(collections) {
 	const listExcludedCollections = ["system.indexes"];
 
-	return collections.filter((c) => listExcludedCollections.indexOf(c.name) === -1);
+	return collections.filter((collection) => {
+		return collection.name.length < 8 || collection.name.substring(0, 7) !== 'system.';
+	});
 }
 
 function getSampleDocSize(count, recordSamplingSettings) {
