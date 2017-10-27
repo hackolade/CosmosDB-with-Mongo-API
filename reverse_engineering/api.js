@@ -207,7 +207,6 @@ module.exports = {
 							});
 
 							collection.count((err, count) => {
-								// self.setProgress({modelName: dbName, collectionName: collectionName, process: 'get data from database'});
 								const amount = !err && count > 0 ? count : 1000;
 								const size = +getSampleDocSize(amount, recordSamplingSettings) || 1000;	
 
