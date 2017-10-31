@@ -5,7 +5,6 @@
 	"sample": true,
 	"useSample": true,
 	"defaultValues": {
-		"type": "boolean",
 		"default": "",
 		"enum": [],
 		"primaryKey": false,
