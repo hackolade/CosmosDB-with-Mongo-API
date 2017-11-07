@@ -1,7 +1,13 @@
+/* 
+{
+	"scenario": "getDatabases|getDocumentKinds|connectToDB(default)"	
+} 
+*/
 {
 	"errors": {
 		"NO_DATABASES": "There are no databases in CosmosDB instance",
 		"WRONG_CONNECTION": "Can not connect to CosmosDB instance"
 	},
-	"excludeDocKind": ["id"]
+	"excludeDocKind": ["id"],
+	"scenario": "getDatabases"
 }

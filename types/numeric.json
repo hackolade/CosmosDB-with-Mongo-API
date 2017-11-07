@@ -4,7 +4,6 @@
 	"dtdAbbreviation": "{123}",
 	"useSample": true,
 	"defaultValues": {
-		"type": "numeric",
 		"primaryKey": false,
 		"relationshipType": "",
 		"parentRelationship": "",

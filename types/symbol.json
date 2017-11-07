@@ -4,7 +4,6 @@
 	"dtdAbbreviation": "{sb}",
 	"useSample": true,
 	"defaultValues": {
-		"type": "symbol",
 		"primaryKey": false,
 		"relationshipType": "",
 		"parentRelationship": "",
