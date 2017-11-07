@@ -5,7 +5,6 @@
 	"sample": ["sample"],
 	"useSample": true,
 	"defaultValues": {
-		"type": "array",
 		"properties": [],
 		"primaryKey": false,
 		"relationshipType": "",
