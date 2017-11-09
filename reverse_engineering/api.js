@@ -174,7 +174,7 @@ module.exports = {
 
 				if (!db) {
 					connection.close();
-					let error = `Failed connection to database ${connectionInfo.database}`;
+					let error = `Failed connection to database ${data.database}`;
 					logger.log('error', error);
 					return cb(error);
 				}
