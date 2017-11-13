@@ -468,7 +468,7 @@ function generateConnectionParams(connectionInfo, logger, cb){
 	cb({
 		url: `mongodb://${connectionInfo.userName}:${connectionInfo.accountKey}@${connectionInfo.host}:${connectionInfo.port}`,
 		options: {
-			ssl: connectionInfo.disableSSL !== true
+			ssl: true
 		}
 	});
 }
