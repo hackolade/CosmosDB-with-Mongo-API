@@ -23,7 +23,7 @@
 				"inputKeyword": "host",
 				"inputType": "text",
 				"inputTooltip": "Specify host IP address or DNS name of the instance",
-				"inputPlaceholder": "https://<databaseaccount>.documents.azure.com"
+				"inputPlaceholder": "<databaseaccount>.documents.azure.com"
 			},
 			{
 				"inputLabel": "Port",
@@ -37,12 +37,6 @@
 	{
 		"lowerTab": "Authentication",
 		"structure": [
-			{
-				"inputLabel": "Disable SSL Authentication for local instance",
-				"inputKeyword": "disableSSL",
-				"inputType": "checkbox",
-				"inputTooltip": "Check this box if you want to connect to a local instance of CosmosDB"
-			},
 			{
 				"inputLabel": "Username",
 				"inputKeyword": "userName",
