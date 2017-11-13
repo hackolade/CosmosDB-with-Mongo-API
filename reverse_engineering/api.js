@@ -181,7 +181,7 @@ module.exports = {
 
 				let modelInfo = {
 					dbId: data.database,
-					accountID: data.accountKey,
+					accountID: data.password,
 					version: []
 				};
 
@@ -466,7 +466,7 @@ function getSampleDocSize(count, recordSamplingSettings) {
 
 function generateConnectionParams(connectionInfo, logger, cb){
 	cb({
-		url: `mongodb://${connectionInfo.userName}:${connectionInfo.accountKey}@${connectionInfo.host}:${connectionInfo.port}`,
+		url: `mongodb://${connectionInfo.userName}:${connectionInfo.password}@${connectionInfo.host}:${connectionInfo.port}`,
 		options: {
 			ssl: true
 		}
