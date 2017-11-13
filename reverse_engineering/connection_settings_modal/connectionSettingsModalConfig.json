@@ -46,7 +46,7 @@
 			},
 			{
 				"inputLabel": "Password",
-				"inputKeyword": "accountKey",
+				"inputKeyword": "password",
 				"inputType": "text",
 				"inputTooltip": "Paste the account password",
 				"isHiddenKey": true,
