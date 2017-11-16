@@ -84,29 +84,24 @@ module.exports = {
 						async.map(collections, (collectionData, collItemCallback) => {
 							const collection = db.collection(collectionData.name);
 
-							collection.count((err, count) => {
-								const amount = !err && count > 0 ? count : 1000;
-								const size = +getSampleDocSize(amount, connectionInfo.recordSamplingSettings) || 1000;
-								
-								collection.find().limit(size).toArray((err, documents) => {
-									if(err){
-										logger.log('error', err);
-										return collItemCallback(err, null);
-									} else {
-										logger.log('info', { collectionItem: collectionData.name }, 'Getting documents for current collectionItem', connectionInfo.hiddenKeys);
-										
-										documents  = filterDocuments(documents);
-										let inferSchema = generateCustomInferSchema(collectionData.name, documents, { sampleSize: 20 });
-										let documentsPackage = getDocumentKindDataFromInfer({ 
-											bucketName: collectionData.name,
-											inference: inferSchema, 
-											isCustomInfer: true, 
-											excludeDocKind: connectionInfo.excludeDocKind 
-										}, 90);
+							getData(collection, connectionInfo.recordSamplingSettings, function (err, documents) {
+								if (err) {
+									logger.log('error', err);
+									return collItemCallback(err, null);
+								} else {
+									logger.log('info', { collectionItem: collectionData.name }, 'Getting documents for current collectionItem', connectionInfo.hiddenKeys);
+									
+									documents  = filterDocuments(documents);
+									let inferSchema = generateCustomInferSchema(collectionData.name, documents, { sampleSize: 20 });
+									let documentsPackage = getDocumentKindDataFromInfer({ 
+										bucketName: collectionData.name,
+										inference: inferSchema, 
+										isCustomInfer: true, 
+										excludeDocKind: connectionInfo.excludeDocKind 
+									}, 90);
 
-										return collItemCallback(err, documentsPackage);
-									}
-								});
+									return collItemCallback(err, documentsPackage);
+								}
 							});
 						}, (err, items) => {
 							if(err){
@@ -206,81 +201,76 @@ module.exports = {
 								return  index.name;
 							});
 
-							collection.count((err, count) => {
-								const amount = !err && count > 0 ? count : 1000;
-								const size = +getSampleDocSize(amount, recordSamplingSettings) || 1000;	
+							getData(collection, recordSamplingSettings, (err, documents) => {
+								if(err) {
+									logger.log('error', err);
+									return collItemCallback(err, null);
+								} else {
+									documents  = filterDocuments(documents);
+									let documentKindName = data.documentKinds[bucketName].documentKindName || '*';
+									let docKindsList = data.collectionData.collections[bucketName];
+									let collectionPackages = [];										
 
-								collection.find().limit(size).toArray((err, documents) => {
-									if(err) {
-										logger.log('error', err);
-										return collItemCallback(err, null);
-									} else {
-										documents  = filterDocuments(documents);
-										let documentKindName = data.documentKinds[bucketName].documentKindName || '*';
-										let docKindsList = data.collectionData.collections[bucketName];
-										let collectionPackages = [];										
-
-										if (documentKindName !== '*') {
-											if(!docKindsList) {
-												let documentsPackage = {
-													dbName: bucketName,
-													emptyBucket: true,
-													indexes: [],
-													bucketIndexes: indexes,
-													views: [],
-													validation: false,
-													bucketInfo
-												};
-
-												collectionPackages.push(documentsPackage)
-											} else {
-												docKindsList.forEach(docKindItem => {
-													let newArrayDocuments = documents.filter((item) => {
-														return item[documentKindName] == docKindItem;
-													});
-
-													let documentsPackage = {
-														dbName: bucketName,
-														collectionName: docKindItem,
-														documents: newArrayDocuments || [],
-														indexes: [],
-														bucketIndexes: indexes,
-														views: [],
-														validation: false,
-														docType: documentKindName,
-														bucketInfo
-													};
-
-													if(fieldInference.active === 'field') {
-														documentsPackage.documentTemplate = newArrayDocuments[0] || null;
-													}
-
-													collectionPackages.push(documentsPackage)
-												});
-											}
-										} else {
+									if (documentKindName !== '*') {
+										if(!docKindsList) {
 											let documentsPackage = {
 												dbName: bucketName,
-												collectionName: bucketName,
-												documents: documents || [],
+												emptyBucket: true,
 												indexes: [],
 												bucketIndexes: indexes,
 												views: [],
 												validation: false,
-												docType: bucketName,
 												bucketInfo
 											};
 
-											if(fieldInference.active === 'field'){
-												documentsPackage.documentTemplate = documents[0] || null;
-											}
-
 											collectionPackages.push(documentsPackage)
+										} else {
+											docKindsList.forEach(docKindItem => {
+												let newArrayDocuments = documents.filter((item) => {
+													return item[documentKindName] == docKindItem;
+												});
+
+												let documentsPackage = {
+													dbName: bucketName,
+													collectionName: docKindItem,
+													documents: newArrayDocuments || [],
+													indexes: [],
+													bucketIndexes: indexes,
+													views: [],
+													validation: false,
+													docType: documentKindName,
+													bucketInfo
+												};
+
+												if(fieldInference.active === 'field') {
+													documentsPackage.documentTemplate = newArrayDocuments[0] || null;
+												}
+
+												collectionPackages.push(documentsPackage)
+											});
+										}
+									} else {
+										let documentsPackage = {
+											dbName: bucketName,
+											collectionName: bucketName,
+											documents: documents || [],
+											indexes: [],
+											bucketIndexes: indexes,
+											views: [],
+											validation: false,
+											docType: bucketName,
+											bucketInfo
+										};
+
+										if(fieldInference.active === 'field'){
+											documentsPackage.documentTemplate = documents[0] || null;
 										}
 
-										return collItemCallback(err, collectionPackages);
+										collectionPackages.push(documentsPackage)
 									}
-								});
+
+									return collItemCallback(err, collectionPackages);
+								}
 							});
 						}
 					});
@@ -313,30 +303,25 @@ function handleBucket(connectionInfo, collectionNames, database, dbItemCallback)
 			return collItemCallback(`Failed got collection ${collectionName}`);
 		}
 
-		collection.count((err, count) => {
-			const amount = !err && count > 0 ? count : 1000;
-			const size = +getSampleDocSize(amount, connectionInfo.recordSamplingSettings) || 1000;		
-		
-			collection.find().limit(size).toArray((err, documents) => {
-				if(err){
-					return collItemCallback(err);
-				} else {
-					documents  = filterDocuments(documents);
-					let documentKind = connectionInfo.documentKinds[collectionName].documentKindName || '*';
-					let documentTypes = [];
+		getData(collection, connectionInfo.recordSamplingSettings, (err, documents) => {
+			if(err){
+				return collItemCallback(err);
+			} else {
+				documents  = filterDocuments(documents);
+				let documentKind = connectionInfo.documentKinds[collectionName].documentKindName || '*';
+				let documentTypes = [];
 
-					if (documentKind !== '*') {
-						documentTypes = documents.map(function(doc){
-							return doc[documentKind];
-						});
-						documentTypes = documentTypes.filter((item) => Boolean(item));
-						documentTypes = _.uniq(documentTypes);
-					}
-
-					let dataItem = prepareConnectionDataItem(documentTypes, collectionName, database);
-					return collItemCallback(err, dataItem);
+				if (documentKind !== '*') {
+					documentTypes = documents.map(function(doc){
+						return doc[documentKind];
+					});
+					documentTypes = documentTypes.filter((item) => Boolean(item));
+					documentTypes = _.uniq(documentTypes);
 				}
-			});
+
+				let dataItem = prepareConnectionDataItem(documentTypes, collectionName, database);
+				return collItemCallback(err, dataItem);
+			}
 		});
 	}, (err, items) => {
 		return dbItemCallback(err, items);
@@ -471,4 +456,42 @@ function generateConnectionParams(connectionInfo, logger, cb){
 			ssl: true
 		}
 	});
+}
+
+function getData(collection, sampleSettings, callback) {
+	collection.count((err, count) => {
+		const amount = !err && count > 0 ? count : 1000;								
+		const size = +getSampleDocSize(amount, sampleSettings) || 1000;
+		const iterations = size > 1000 ? Math.ceil(size / 1000) : 1;
+
+		asyncLoop(iterations, function (i, callback) {
+			const limit = i < iterations - 1 || size % 1000 === 0 ? 1000 : size % 1000;
+			
+			collection.find().limit(limit).toArray(callback);									
+		}, callback);
+	});
+}
+
+function asyncLoop(iterations, callback, done) {
+	let result = [];
+	let i = 0; 
+	let handler = function (err, data) {
+		if (err) {
+			done(err);
+		} else {
+			result = result.concat(data);
+			
+			if (++i < iterations) {
+				callback(i, handler);
+			} else {
+				done(err, result);
+			}
+		}
+	};
+
+	try {
+		callback(i, handler);
+	} catch (e) {
+		done(e);
+	}
 }
