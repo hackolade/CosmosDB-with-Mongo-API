@@ -4,7 +4,6 @@
 	"dtdAbbreviation": "{null}",
 	"useSample": false,
 	"defaultValues": {
-		"type": "null",
 		"primaryKey": false,
 		"relationshipType": "",
 		"parentRelationship": "",

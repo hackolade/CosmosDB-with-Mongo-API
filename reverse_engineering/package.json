@@ -5,6 +5,6 @@
   "author": "Hackolade",
   "dependencies": {
     "async": "^2.5.0",
-    "documentdb": "^1.12.2"
+    "mongodb": "^2.2.25"
   }
 }

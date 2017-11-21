@@ -4,7 +4,6 @@
 	"dtdAbbreviation": "{rgx}",
 	"useSample": true,
 	"defaultValues": {
-		"type": "regex",
 		"primaryKey": false,
 		"relationshipType": "",
 		"parentRelationship": "",

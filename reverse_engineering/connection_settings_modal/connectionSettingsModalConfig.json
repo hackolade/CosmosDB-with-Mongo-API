@@ -23,7 +23,7 @@
 				"inputKeyword": "host",
 				"inputType": "text",
 				"inputTooltip": "Specify host IP address or DNS name of the instance",
-				"inputPlaceholder": "https://<databaseaccount>.documents.azure.com"
+				"inputPlaceholder": "<databaseaccount>.documents.azure.com"
 			},
 			{
 				"inputLabel": "Port",
@@ -32,35 +32,25 @@
 				"inputTooltip": "Specify the port number of the instance",
 				"inputPlaceholder": "10255"
 			}
-		],
+		]
+	},
+	{
 		"lowerTab": "Authentication",
 		"structure": [
 			{
-				"inputLabel": "User Name",
+				"inputLabel": "Username",
 				"inputKeyword": "userName",
 				"inputType": "text",
-				"inputTooltip": "Enter the user name or account ID"
+				"inputTooltip": "Enter the user name"
 				
 			},
 			{
-				"inputLabel": "Account Key",
-				"inputKeyword": "accountKey",
+				"inputLabel": "Password",
+				"inputKeyword": "password",
 				"inputType": "text",
-				"inputTooltip": "Paste the account Primary or Secondary (Read-Only) Key, or C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw== if local instance",
+				"inputTooltip": "Paste the account password",
 				"isHiddenKey": true,
 				"defaultValue": ""
-			}
-		],
-		"lowerTab": "SSL",
-		"structure": [
-			{
-				"inputLabel": "SSL",
-				"inputKeyword": "ssl",
-				"inputType": "select",
-				"inputTooltip": "Enter the user name or account ID",
-				"options": [
-					"Unvalidated"
-				]				
 			}
 		]
 	}

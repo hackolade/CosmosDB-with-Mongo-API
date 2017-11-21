@@ -4,7 +4,6 @@
 	"dtdAbbreviation": "{js}",
 	"useSample": true,
 	"defaultValues": {
-		"type": "JavaScript",
 		"primaryKey": false,
 		"relationshipType": "",
 		"parentRelationship": "",

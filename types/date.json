@@ -4,7 +4,6 @@
 	"dtdAbbreviation": "{dt}",
 	"useSample": true,
 	"defaultValues": {
-		"type": "date",
 		"primaryKey": false,
 		"relationshipType": "",
 		"parentRelationship": "",

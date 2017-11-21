@@ -4,7 +4,6 @@
 	"dtdAbbreviation": "{maxK}",
 	"useSample": true,
 	"defaultValues": {
-		"type": "maxKey",
 		"primaryKey": false,
 		"relationshipType": "",
 		"parentRelationship": "",
