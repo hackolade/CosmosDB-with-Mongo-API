@@ -5,6 +5,14 @@ const _ = require('lodash');
 const MongoClient = require('mongodb').MongoClient;
 const fs = require('fs');
 
+const ERROR_CONNECTION = 1;
+const ERROR_DB_LIST = 2;
+const ERROR_DB_CONNECTION = 3;
+const ERROR_LIST_COLLECTION = 4;
+const ERROR_GET_DATA = 5;
+const ERROR_HANDLE_BUCKET = 6;
+const ERROR_COLLECTION_DATA = 7;
+
 module.exports = {
 	connect: function(connectionInfo, logger, cb){
 		logger.clear();
@@ -14,7 +22,7 @@ module.exports = {
 			MongoClient.connect(params.url, params.options, function (err, dbConnection) {
 				if (err) {
 					logger.log('error', [params, err], "Connection error");
-					return cb(err);
+					return cb(createError(ERROR_CONNECTION, err));
 				} else {
 					return cb(null, dbConnection);
 				}
@@ -47,19 +55,19 @@ module.exports = {
 					if(err) {
 						logger.log('error', err);
 						connection.close();
-						return cb(err);
+						return cb(createError(ERROR_DB_LIST, err));
 					} else {
 						dbs = dbs.databases.map(item => item.name);
 						logger.log('info', dbs, 'All databases list', connectionInfo.hiddenKeys);
 						connection.close();
-						return cb(err, dbs);
+						return cb(null, dbs);
 					}
 				});
 			}
 		});
 	},
 
-	getDocumentKinds: function(connectionInfo, logger, cb) {
+	getDocumentKinds: function(connectionInfo, logger, cb) {		
 		this.connect(connectionInfo, logger, (err, connection) => {
 			if (err) {
 				logger.log('error', err);
@@ -69,14 +77,14 @@ module.exports = {
 				
 				if (!db) {
 					connection.close();
-					return cb(`Failed connection to database ${connectionInfo.database}`);
+					return cb(createError(ERROR_DB_CONNECTION, `Failed connection to database ${connectionInfo.database}`));
 				}
 
 				db.listCollections().toArray((err, collections) => {
 					if (err) {
 						logger.log('error', err);
 						connection.close();
-						cb(err);
+						cb(createError(ERROR_LIST_COLLECTION, err));
 					} else {
 						collections = connectionInfo.includeSystemCollection ? collections : filterSystemCollections(collections);
 						logger.log('info', collections, 'Mapped collection list');
@@ -109,7 +117,7 @@ module.exports = {
 							}
 
 							connection.close();		
-							return cb(err, items);
+							return cb(createError(ERROR_GET_DATA, err), items);
 						});
 					}
 				});
@@ -127,7 +135,7 @@ module.exports = {
 				
 				if (!db) {
 					connection.close();
-					return cb(`Failed connection to database ${connectionInfo.database}`);
+					return cb(createError(ERROR_DB_CONNECTION, `Failed connection to database ${connectionInfo.database}`));
 				}
 
 				logger.log('info', { Database: connectionInfo.database }, 'Getting collections list for current database', connectionInfo.hiddenKeys);
@@ -136,7 +144,7 @@ module.exports = {
 					if(err){
 						logger.log('error', err);
 						connection.close();
-						return cb(err)
+						return cb(createError(ERROR_LIST_COLLECTION, err));
 					} else {
 						let collectionNames = (connectionInfo.includeSystemCollection ? collections : filterSystemCollections(collections)).map(item => item.name);
 						logger.log('info', collectionNames, "Collection list for current database", connectionInfo.hiddenKeys);
@@ -171,7 +179,7 @@ module.exports = {
 					connection.close();
 					let error = `Failed connection to database ${data.database}`;
 					logger.log('error', error);
-					return cb(error);
+					return cb(createError(ERROR_DB_CONNECTION, error));
 				}
 
 				let modelInfo = {
@@ -276,11 +284,10 @@ module.exports = {
 					});
 				}, (err, items) => {
 					if(err){
-						console.log(err);
 						logger.log('error', err);
 					}
 					connection.close();
-					return cb(err, items, modelInfo);
+					return cb(createError(ERROR_COLLECTION_DATA, err), items, modelInfo);
 				});
 			}
 		});
@@ -324,7 +331,7 @@ function handleBucket(connectionInfo, collectionNames, database, dbItemCallback)
 			}
 		});
 	}, (err, items) => {
-		return dbItemCallback(err, items);
+		return dbItemCallback(createError(ERROR_HANDLE_BUCKET, err), items);
 	});
 }
 
@@ -494,4 +501,16 @@ function asyncLoop(iterations, callback, done) {
 	} catch (e) {
 		done(e);
 	}
+}
+
+function createError(code, message) {
+	if (!message) {
+		return null;
+	}
+	if (message.code) {
+		code = message.code;
+	}
+	message = message.message || message.msg || message.errmsg || message;
+
+	return {code, message};
 }
