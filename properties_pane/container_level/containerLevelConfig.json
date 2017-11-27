@@ -140,7 +140,7 @@ making sure that you maintain a proper JSON format.
 				"shouldValidate": true,
 				"propertyTooltip": "TTL in seconds if TTL is ON",
 				"propertyType": "numeric",
-				"valueType": "number"
+				"valueType": "integer"
 			},
 			{
 				"propertyName": "Partition key",
