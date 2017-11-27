@@ -134,5 +134,5 @@
 	"MONGODB_SCRIPT_WARNING_MESSAGE": "This view is not associated to a collection (viewOn property).",
 	"TYPE": {},
 	"MODAL_WINDOW___SELECTION_DOCUMENT_KIND_REVERSE_ENGINEERING_TITLE": "Select Document Type field",
-	"MODAL_WINDOW___SELECTION_DOCUMENT_KIND_REVERSE_ENGINEERING": "No document type separation",
+	"MODAL_WINDOW___SELECTION_DOCUMENT_KIND_REVERSE_ENGINEERING": "No document type separation"
 }
