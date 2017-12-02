@@ -132,5 +132,7 @@
 	"COLLECTION_SCHEMA_DEFINITION_NAME": "Collection definitions",
 	"COLLECTION_SCHEMA_DEFINITION_TYPE": "document",
 	"MONGODB_SCRIPT_WARNING_MESSAGE": "This view is not associated to a collection (viewOn property).",
-	"TYPE": {}
+	"TYPE": {},
+	"MODAL_WINDOW___SELECTION_DOCUMENT_KIND_REVERSE_ENGINEERING_TITLE": "Select Document Type field",
+	"MODAL_WINDOW___SELECTION_DOCUMENT_KIND_REVERSE_ENGINEERING": "No document type separation"
 }
