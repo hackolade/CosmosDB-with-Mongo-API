@@ -153,11 +153,7 @@ module.exports = {
 							if (err) {
 								cb(err);
 							} else {
-								if (connectionInfo.includeEmptyCollection) {
-									cb(null, items);
-								} else {
-									cb(null, filterEmptyCollections(items));
-								}
+								cb(null, items);
 							}
 						});
 					}
@@ -228,17 +224,19 @@ module.exports = {
 
 									if (documentKindName !== '*') {
 										if(!docKindsList) {
-											let documentsPackage = {
-												dbName: bucketName,
-												emptyBucket: true,
-												indexes: [],
-												bucketIndexes: indexes,
-												views: [],
-												validation: false,
-												bucketInfo
-											};
+											if (includeEmptyCollection) {
+												let documentsPackage = {
+													dbName: bucketName,
+													emptyBucket: true,
+													indexes: [],
+													bucketIndexes: indexes,
+													views: [],
+													validation: false,
+													bucketInfo
+												};
 
-											collectionPackages.push(documentsPackage)
+												collectionPackages.push(documentsPackage)
+											}
 										} else {
 											docKindsList.forEach(docKindItem => {
 												let newArrayDocuments = documents.filter((item) => {
@@ -260,8 +258,9 @@ module.exports = {
 												if(fieldInference.active === 'field') {
 													documentsPackage.documentTemplate = newArrayDocuments[0] || null;
 												}
-
-												collectionPackages.push(documentsPackage)
+												if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
+													collectionPackages.push(documentsPackage)
+												}
 											});
 										}
 									} else {
@@ -280,8 +279,9 @@ module.exports = {
 										if(fieldInference.active === 'field'){
 											documentsPackage.documentTemplate = documents[0] || null;
 										}
-
-										collectionPackages.push(documentsPackage)
+										if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
+											collectionPackages.push(documentsPackage);
+										}
 									}
 
 									return collItemCallback(err, collectionPackages);
@@ -455,10 +455,6 @@ function filterSystemCollections(collections) {
 	return collections.filter((collection) => {
 		return collection.name.length < 8 || collection.name.substring(0, 7) !== 'system.';
 	});
-}
-
-function filterEmptyCollections(collections) {
-	return collections.filter((collection) => !collection.isEmpty);
 }
 
 function getSampleDocSize(count, recordSamplingSettings) {
