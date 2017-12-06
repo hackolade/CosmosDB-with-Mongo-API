@@ -148,10 +148,13 @@ module.exports = {
 					} else {
 						let collectionNames = (connectionInfo.includeSystemCollection ? collections : filterSystemCollections(collections)).map(item => item.name);
 						logger.log('info', collectionNames, "Collection list for current database", connectionInfo.hiddenKeys);
-						handleBucket(connectionInfo, collectionNames, db, function () {
+						handleBucket(connectionInfo, collectionNames, db, function (err, items) {
 							connection.close();
-
-							cb.apply(this, arguments);
+							if (err) {
+								cb(err);
+							} else {
+								cb(null, items);
+							}
 						});
 					}
 				});
@@ -221,17 +224,19 @@ module.exports = {
 
 									if (documentKindName !== '*') {
 										if(!docKindsList) {
-											let documentsPackage = {
-												dbName: bucketName,
-												emptyBucket: true,
-												indexes: [],
-												bucketIndexes: indexes,
-												views: [],
-												validation: false,
-												bucketInfo
-											};
+											if (includeEmptyCollection) {
+												let documentsPackage = {
+													dbName: bucketName,
+													emptyBucket: true,
+													indexes: [],
+													bucketIndexes: indexes,
+													views: [],
+													validation: false,
+													bucketInfo
+												};
 
-											collectionPackages.push(documentsPackage)
+												collectionPackages.push(documentsPackage)
+											}
 										} else {
 											docKindsList.forEach(docKindItem => {
 												let newArrayDocuments = documents.filter((item) => {
@@ -253,8 +258,9 @@ module.exports = {
 												if(fieldInference.active === 'field') {
 													documentsPackage.documentTemplate = newArrayDocuments[0] || null;
 												}
-
-												collectionPackages.push(documentsPackage)
+												if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
+													collectionPackages.push(documentsPackage)
+												}
 											});
 										}
 									} else {
@@ -273,8 +279,9 @@ module.exports = {
 										if(fieldInference.active === 'field'){
 											documentsPackage.documentTemplate = documents[0] || null;
 										}
-
-										collectionPackages.push(documentsPackage)
+										if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
+											collectionPackages.push(documentsPackage);
+										}
 									}
 
 									return collItemCallback(err, collectionPackages);
@@ -326,7 +333,7 @@ function handleBucket(connectionInfo, collectionNames, database, dbItemCallback)
 					documentTypes = _.uniq(documentTypes);
 				}
 
-				let dataItem = prepareConnectionDataItem(documentTypes, collectionName, database);
+				let dataItem = prepareConnectionDataItem(documentTypes, collectionName, database, documents.length === 0);
 				return collItemCallback(err, dataItem);
 			}
 		});
@@ -335,11 +342,12 @@ function handleBucket(connectionInfo, collectionNames, database, dbItemCallback)
 	});
 }
 
-function prepareConnectionDataItem(documentTypes, bucketName, database){
+function prepareConnectionDataItem(documentTypes, bucketName, database, isEmpty){
 	let uniqueDocuments = _.uniq(documentTypes);
 	let connectionDataItem = {
 		dbName: bucketName,
-		dbCollections: uniqueDocuments
+		dbCollections: uniqueDocuments,
+		isEmpty
 	};
 
 	return connectionDataItem;
