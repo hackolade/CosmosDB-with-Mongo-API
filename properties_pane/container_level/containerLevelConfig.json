@@ -104,7 +104,7 @@ making sure that you maintain a proper JSON format.
 			"typeName": "Data type",
 			"typeOptions": [
 				"string",
-				"number",
+				"numeric",
 				"boolean"
 			],
 			"defaultType": "string",
