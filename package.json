@@ -15,7 +15,36 @@
 			]
 		},
 		"features": {
-			"nestedCollections": false
+			"nestedCollections": false,
+			"forwardEngineering": {
+				"jsonSchema": {
+					"keepParentType": {
+						"objectId": {
+							"type": "string",
+							"pattern": "^[a-fA-F0-9]*$"
+						},
+						"regex": "string",
+						"date": {
+							"type": "string",
+							"format": "date-time"
+						},
+						"timestamp": {
+							"type": "string",
+							"format": "date-time"
+						},
+						"binary": {
+							"type": "string",
+							"mediaType": "image/png",
+							"contentEncoding": "base64"
+						},
+						"JavaScript": "string",
+						"JavaScript(w/scope)": "string",
+						"symbol": "string",
+						"minKey": "number",
+						"maxKey": "number"
+					}
+				}
+			}
 		}
 	},
 	"description": "Hackolade plugin for Azure Cosmos DB with MongoDB API"
