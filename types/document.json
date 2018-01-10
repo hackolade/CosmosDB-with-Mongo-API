@@ -2,7 +2,6 @@
 	"name": "document",
 	"erdAbbreviation": "<doc>",
 	"dtdAbbreviation": "{...}",
-	"parentType": "document",
 	"defaultValues": {
 		"dependencies": [],
 		"primaryKey": false,
