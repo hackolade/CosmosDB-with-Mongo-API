@@ -21,7 +21,7 @@
 					"keepParentType": {
 						"objectId": {
 							"type": "string",
-							"pattern": "^[a-fA-F0-9]*$"
+							"pattern": "^[a-fA-F0-9]{24}$"
 						},
 						"regex": "string",
 						"date": {
