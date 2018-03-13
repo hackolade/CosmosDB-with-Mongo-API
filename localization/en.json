@@ -20,7 +20,7 @@
 	"TOOLBAR___SHOW_MODEL_VIEW": "Toggle model views",
 	"TOOLBAR___DISTRIBUTE_ORTHOGONALLY": "Distribute collections orthogonally",
 	"OBJECT___BROWSER_BUCKET": "Collections",
-	"OBJECT___BROWSER_NOT_IN_BUCKET": "Undefined Keyspace",
+	"OBJECT___BROWSER_NOT_IN_BUCKET": "Undefined Collection",
 	"OBJECT___BROWSER_COLLECTION": "Document types",
 	"OBJECT___BROWSER_VIEWS": "Views",
 	"OBJECT___BROWSER_DEFINITIONS": "Definitions",
@@ -105,7 +105,7 @@
 	"DOCUMENTATION___VIEWS": "Views",
 	"DOCUMENTATION___VIEW": "View",
 	"TOOLTIPS___FOREIGN_COLLECTION": "foreign collection",
-	"TOOLTIPS___COLLECTION_BUCKET": "keyspace",
+	"TOOLTIPS___COLLECTION_BUCKET": "Collection",
 	"TOOLTIPS___FOREIGN_FIELD": "foreign field",
 	"TOOLTIPS___PARENT_COLLECTION": "parent collection",
 	"TOOLTIPS___PARENT_FIELD": "parent field",
@@ -134,5 +134,7 @@
 	"MONGODB_SCRIPT_WARNING_MESSAGE": "This view is not associated to a collection (viewOn property).",
 	"TYPE": {},
 	"MODAL_WINDOW___SELECTION_DOCUMENT_KIND_REVERSE_ENGINEERING_TITLE": "Select Document Type field",
-	"MODAL_WINDOW___SELECTION_DOCUMENT_KIND_REVERSE_ENGINEERING": "No document type separation"
+ 	"MODAL_WINDOW___SELECTION_DOCUMENT_KIND_REVERSE_ENGINEERING": "No document type separation",
+	"CONTEXT_MENU___CONVERT_TO_PATTERN_FIELD": "Convert to Pattern Field",
+	"CONTEXT_MENU___CONVERT_PATTERN_TO_REGULAR_FIELD": "Convert to Regular Field"
 }
