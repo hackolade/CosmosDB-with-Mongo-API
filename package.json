@@ -44,7 +44,8 @@
 						"maxKey": "number"
 					}
 				}
-			}
+			},
+			"enableReverseEngineering": true
 		}
 	},
 	"description": "Hackolade plugin for Azure Cosmos DB with MongoDB API"
