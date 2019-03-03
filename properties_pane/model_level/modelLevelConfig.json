@@ -181,7 +181,10 @@ making sure that you maintain a proper JSON format.
 				"propertyType": "select",
 				"options": [
 					"SQL API",
-					"Mongo API"
+					"Mongo API",
+					"Cassandra API",
+					"Gremlin API",
+					"Table API"
 				],
 				"disabledOption": true
 			},
