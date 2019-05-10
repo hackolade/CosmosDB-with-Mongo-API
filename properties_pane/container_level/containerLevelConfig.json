@@ -240,7 +240,7 @@ making sure that you maintain a proper JSON format.
 					"shouldValidate": false,
 					"propertyTooltip": "Included path index expression",
 					"propertyType": "details",
-					"template": "textarea"
+					"template": "textareaWithoutMarkdown"
 				},
 				{
 					"propertyName": "Kind",
@@ -282,7 +282,7 @@ making sure that you maintain a proper JSON format.
 					"shouldValidate": false,
 					"propertyTooltip": "Excluded path index expression",
 					"propertyType": "details",
-					"template": "textarea"
+					"template": "textareaWithoutMarkdown"
 				},
 				{
 					"propertyName": "Comments",
@@ -332,7 +332,7 @@ making sure that you maintain a proper JSON format.
 					"shouldValidate": false,
 					"propertyTooltip": "description",
 					"propertyType": "details",
-					"template": "textarea"
+					"template": "textareaWithoutMarkdown"
 				},
 				{
 					"propertyName": "Comments",
@@ -406,7 +406,7 @@ making sure that you maintain a proper JSON format.
 					"shouldValidate": false,
 					"propertyTooltip": "description",
 					"propertyType": "details",
-					"template": "textarea"
+					"template": "textareaWithoutMarkdown"
 				},
 				{
 					"propertyName": "Comments",
@@ -456,7 +456,7 @@ making sure that you maintain a proper JSON format.
 					"shouldValidate": false,
 					"propertyTooltip": "description",
 					"propertyType": "details",
-					"template": "textarea"
+					"template": "textareaWithoutMarkdown"
 				},
 				{
 					"propertyName": "Comments",
