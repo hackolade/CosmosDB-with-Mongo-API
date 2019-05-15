@@ -27,7 +27,7 @@
 		"name": "New field"
 	},
 	"patternField": {
-		"name": "^New Pattern Field$"
+		"name": "^[a-zA-Z0-9_.-]+$"
 	},
 	"multipleField": {
 		"primaryKey": false
