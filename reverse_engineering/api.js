@@ -165,6 +165,7 @@ module.exports = {
 	getDbCollectionsData: function(data, logger, cb){
 		let includeEmptyCollection = data.includeEmptyCollection;
 		let { recordSamplingSettings, fieldInference } = data;
+		logger.progress = logger.progress || (() => {});
 		logger.log('info', getSamplingInfo(recordSamplingSettings, fieldInference), 'Reverse-Engineering sampling params', data.hiddenKeys);
 
 		let bucketList = data.collectionData.dataBaseNames;
@@ -173,6 +174,7 @@ module.exports = {
 
 		this.connect(data, logger, (err, connection) => {
 			if (err) {
+				logger.progress({ message: 'Error of connecting to the instance.\n ' + err.message, containerName: data.database, entityName: '' });											
 				logger.log('error', err);
 				return cb(err);
 			} else {
@@ -182,6 +184,7 @@ module.exports = {
 					connection.close();
 					let error = `Failed connection to database ${data.database}`;
 					logger.log('error', error);
+					logger.progress({ message: 'Error of connecting to the database .\n ' + data.database, containerName: data.database, entityName: '' });											
 					return cb(createError(ERROR_DB_CONNECTION, error));
 				}
 
@@ -191,22 +194,28 @@ module.exports = {
 					version: []
 				};
 
-				db.admin().buildInfo((err, version) => {
+				db.admin().buildInfo((err, info) => {
 					if (err) {
-						modelInfo.version = info.versionArray;
+						return;
 					}
+					
+					modelInfo.version = info.version;
 				});
 
 				async.map(bucketList, (bucketName, collItemCallback) => {
 					const collection = db.collection(bucketName);
+					logger.progress({ message: 'Collection data loading ...', containerName: data.database, entityName: bucketName });											
 
 					getBucketInfo(db, bucketName, (err, bucketInfo = {}) => {
 						if (err) {
+							logger.progress({ message: 'Error of getting collection data .\n ' + err.message, containerName: data.database, entityName: bucketName });											
 							logger.log('error', err);
 						}
 						collection.indexes(function(err, collecctionIndexes){
 							if (err){
 								logger.log('error', err);
+								logger.progress({ message: 'Error of getting indexes.\n ' + err.message, containerName: data.database, entityName: bucketName });											
+
 								return collectionItemCallback(err, null);
 							} else {
 								const indexes = collecctionIndexes.filter(index => {
@@ -214,12 +223,17 @@ module.exports = {
 									delete index.v;
 									return  index.name;
 								});
+								logger.progress({ message: 'Collection data has loaded', containerName: data.database, entityName: bucketName });											
+								logger.progress({ message: 'Loading documents...', containerName: data.database, entityName: bucketName });											
 	
 								getData(collection, recordSamplingSettings, (err, documents) => {
 									if(err) {
+										logger.progress({ message: 'Error of loading documents.\n ' + err.message, containerName: data.database, entityName: bucketName });											
 										logger.log('error', err);
 										return collItemCallback(err, null);
 									} else {
+										logger.progress({ message: 'Documents have loaded', containerName: data.database, entityName: bucketName });											
+
 										documents  = filterDocuments(documents);
 										let documentKindName = data.documentKinds[bucketName].documentKindName || '*';
 										let docKindsList = data.collectionData.collections[bucketName];
