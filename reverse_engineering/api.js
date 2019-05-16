@@ -199,95 +199,99 @@ module.exports = {
 
 				async.map(bucketList, (bucketName, collItemCallback) => {
 					const collection = db.collection(bucketName);
-					const bucketInfo = {};
-					
-					collection.indexes(function(err, collecctionIndexes){
-						if (err){
+
+					getBucketInfo(db, bucketName, (err, bucketInfo = {}) => {
+						if (err) {
 							logger.log('error', err);
-							return collectionItemCallback(err, null);
-						} else {
-							const indexes = collecctionIndexes.filter(index => {
-								delete index.ns;
-								delete index.v;
-								return  index.name;
-							});
-
-							getData(collection, recordSamplingSettings, (err, documents) => {
-								if(err) {
-									logger.log('error', err);
-									return collItemCallback(err, null);
-								} else {
-									documents  = filterDocuments(documents);
-									let documentKindName = data.documentKinds[bucketName].documentKindName || '*';
-									let docKindsList = data.collectionData.collections[bucketName];
-									let collectionPackages = [];										
-
-									if (documentKindName !== '*') {
-										if(!docKindsList) {
-											if (includeEmptyCollection) {
-												let documentsPackage = {
-													dbName: bucketName,
-													emptyBucket: true,
-													indexes: [],
-													bucketIndexes: indexes,
-													views: [],
-													validation: false,
-													bucketInfo
-												};
-
-												collectionPackages.push(documentsPackage)
-											}
-										} else {
-											docKindsList.forEach(docKindItem => {
-												let newArrayDocuments = documents.filter((item) => {
-													return item[documentKindName] == docKindItem;
-												});
-
-												let documentsPackage = {
-													dbName: bucketName,
-													collectionName: docKindItem,
-													documents: newArrayDocuments || [],
-													indexes: [],
-													bucketIndexes: indexes,
-													views: [],
-													validation: false,
-													docType: documentKindName,
-													bucketInfo
-												};
-
-												if(fieldInference.active === 'field') {
-													documentsPackage.documentTemplate = newArrayDocuments[0] || null;
-												}
-												if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
+						}
+						collection.indexes(function(err, collecctionIndexes){
+							if (err){
+								logger.log('error', err);
+								return collectionItemCallback(err, null);
+							} else {
+								const indexes = collecctionIndexes.filter(index => {
+									delete index.ns;
+									delete index.v;
+									return  index.name;
+								});
+	
+								getData(collection, recordSamplingSettings, (err, documents) => {
+									if(err) {
+										logger.log('error', err);
+										return collItemCallback(err, null);
+									} else {
+										documents  = filterDocuments(documents);
+										let documentKindName = data.documentKinds[bucketName].documentKindName || '*';
+										let docKindsList = data.collectionData.collections[bucketName];
+										let collectionPackages = [];										
+	
+										if (documentKindName !== '*') {
+											if(!docKindsList) {
+												if (includeEmptyCollection) {
+													let documentsPackage = {
+														dbName: bucketName,
+														emptyBucket: true,
+														indexes: [],
+														bucketIndexes: indexes,
+														views: [],
+														validation: false,
+														bucketInfo
+													};
+	
 													collectionPackages.push(documentsPackage)
 												}
-											});
+											} else {
+												docKindsList.forEach(docKindItem => {
+													let newArrayDocuments = documents.filter((item) => {
+														return item[documentKindName] == docKindItem;
+													});
+	
+													let documentsPackage = {
+														dbName: bucketName,
+														collectionName: docKindItem,
+														documents: newArrayDocuments || [],
+														indexes: [],
+														bucketIndexes: indexes,
+														views: [],
+														validation: false,
+														docType: documentKindName,
+														bucketInfo
+													};
+	
+													if(fieldInference.active === 'field') {
+														documentsPackage.documentTemplate = newArrayDocuments[0] || null;
+													}
+													if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
+														collectionPackages.push(documentsPackage)
+													}
+												});
+											}
+										} else {
+											let documentsPackage = {
+												dbName: bucketName,
+												collectionName: bucketName,
+												documents: documents || [],
+												indexes: [],
+												bucketIndexes: indexes,
+												views: [],
+												validation: false,
+												docType: bucketName,
+												bucketInfo
+											};
+	
+											if(fieldInference.active === 'field'){
+												documentsPackage.documentTemplate = documents[0] || null;
+											}
+											if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
+												collectionPackages.push(documentsPackage);
+											}
 										}
-									} else {
-										let documentsPackage = {
-											dbName: bucketName,
-											collectionName: bucketName,
-											documents: documents || [],
-											indexes: [],
-											bucketIndexes: indexes,
-											views: [],
-											validation: false,
-											docType: bucketName,
-											bucketInfo
-										};
-
-										if(fieldInference.active === 'field'){
-											documentsPackage.documentTemplate = documents[0] || null;
-										}
-										if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
-											collectionPackages.push(documentsPackage);
-										}
+	
+										return collItemCallback(err, collectionPackages);
 									}
-
-									return collItemCallback(err, collectionPackages);
-								}
-							});
-						}
+								});
+							}
+						});
 					});
 				}, (err, items) => {
 					if(err){
@@ -521,4 +525,64 @@ function createError(code, message) {
 	message = message.message || message.msg || message.errmsg || message;
 
 	return {code, message};
+}
+
+const getShardingKey = (db, collectionName) => new Promise((resolve, reject) => {
+	db.command({
+		customAction: 'GetCollection',
+		collection: collectionName
+	}, (err, result) => {
+		if (err) {
+			return reject(err);
+		}
+
+		if (!result.shardKeyDefinition) {
+			return resolve('');
+		}
+
+		const shardingKey = Object.keys(result.shardKeyDefinition).join(',');
+
+		return resolve(shardingKey);
+	});
+});
+const getUniqueKeys = (db, collectionName) => new Promise((resolve, reject) => {
+	db.command({
+		listIndexes: collectionName
+	}, (err, result) => {
+		if (err) {
+			return reject(err);
+		}
+
+		if (!result.cursor && !Array.isArray(result.cursor.firstBatch)) {
+			return resolve([]);
+		}
+
+		const uniqueKeys = result.cursor.firstBatch.filter(item => {
+			return item.unique;
+		}).map((item) => {
+			return {
+				attributePath: Object.keys(item.key).join(',')
+			};
+		});
+
+		resolve(uniqueKeys);
+	});
+});
+
+function getBucketInfo(dbInstance, collectionName, cb) {
+	const bucketInfo = {};
+
+	Promise.all([
+		getShardingKey(dbInstance, collectionName).then(result => {
+			bucketInfo.partitionKey = result;
+		}),
+		getUniqueKeys(dbInstance, collectionName).then(result => {
+			bucketInfo.uniqueKey = result;
+		})
+	]).then(() => {
+		cb(null, bucketInfo);
+	}, err => {
+		cb(err, bucketInfo);
+	});
+
 }
