@@ -574,7 +574,7 @@ function getBucketInfo(dbInstance, collectionName, cb) {
 
 	Promise.all([
 		getShardingKey(dbInstance, collectionName).then(result => {
-			bucketInfo.partitionKey = result;
+			bucketInfo.shardKey = result;
 		}),
 		getUniqueKeys(dbInstance, collectionName).then(result => {
 			bucketInfo.uniqueKey = result;
