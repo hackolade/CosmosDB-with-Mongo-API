@@ -165,6 +165,7 @@ module.exports = {
 	getDbCollectionsData: function(data, logger, cb){
 		let includeEmptyCollection = data.includeEmptyCollection;
 		let { recordSamplingSettings, fieldInference } = data;
+		logger.progress = logger.progress || (() => {});
 		logger.log('info', getSamplingInfo(recordSamplingSettings, fieldInference), 'Reverse-Engineering sampling params', data.hiddenKeys);
 
 		let bucketList = data.collectionData.dataBaseNames;
@@ -173,6 +174,7 @@ module.exports = {
 
 		this.connect(data, logger, (err, connection) => {
 			if (err) {
+				logger.progress({ message: 'Error of connecting to the instance.\n ' + err.message, containerName: data.database, entityName: '' });											
 				logger.log('error', err);
 				return cb(err);
 			} else {
@@ -182,6 +184,7 @@ module.exports = {
 					connection.close();
 					let error = `Failed connection to database ${data.database}`;
 					logger.log('error', error);
+					logger.progress({ message: 'Error of connecting to the database .\n ' + data.database, containerName: data.database, entityName: '' });											
 					return cb(createError(ERROR_DB_CONNECTION, error));
 				}
 
@@ -191,103 +194,118 @@ module.exports = {
 					version: []
 				};
 
-				db.admin().buildInfo((err, version) => {
+				db.admin().buildInfo((err, info) => {
 					if (err) {
-						modelInfo.version = info.versionArray;
+						return;
 					}
+					
+					modelInfo.version = info.version;
 				});
 
 				async.map(bucketList, (bucketName, collItemCallback) => {
 					const collection = db.collection(bucketName);
-					const bucketInfo = {};
-					
-					collection.indexes(function(err, collecctionIndexes){
-						if (err){
+					logger.progress({ message: 'Collection data loading ...', containerName: data.database, entityName: bucketName });											
+
+					getBucketInfo(db, bucketName, (err, bucketInfo = {}) => {
+						if (err) {
+							logger.progress({ message: 'Error of getting collection data .\n ' + err.message, containerName: data.database, entityName: bucketName });											
 							logger.log('error', err);
-							return collectionItemCallback(err, null);
-						} else {
-							const indexes = collecctionIndexes.filter(index => {
-								delete index.ns;
-								delete index.v;
-								return  index.name;
-							});
+						}
+						collection.indexes(function(err, collecctionIndexes){
+							if (err){
+								logger.log('error', err);
+								logger.progress({ message: 'Error of getting indexes.\n ' + err.message, containerName: data.database, entityName: bucketName });											
 
-							getData(collection, recordSamplingSettings, (err, documents) => {
-								if(err) {
-									logger.log('error', err);
-									return collItemCallback(err, null);
-								} else {
-									documents  = filterDocuments(documents);
-									let documentKindName = data.documentKinds[bucketName].documentKindName || '*';
-									let docKindsList = data.collectionData.collections[bucketName];
-									let collectionPackages = [];										
+								return collectionItemCallback(err, null);
+							} else {
+								const indexes = collecctionIndexes.filter(index => {
+									delete index.ns;
+									delete index.v;
+									return  index.name;
+								});
+								logger.progress({ message: 'Collection data has loaded', containerName: data.database, entityName: bucketName });											
+								logger.progress({ message: 'Loading documents...', containerName: data.database, entityName: bucketName });											
+	
+								getData(collection, recordSamplingSettings, (err, documents) => {
+									if(err) {
+										logger.progress({ message: 'Error of loading documents.\n ' + err.message, containerName: data.database, entityName: bucketName });											
+										logger.log('error', err);
+										return collItemCallback(err, null);
+									} else {
+										logger.progress({ message: 'Documents have loaded', containerName: data.database, entityName: bucketName });											
 
-									if (documentKindName !== '*') {
-										if(!docKindsList) {
-											if (includeEmptyCollection) {
-												let documentsPackage = {
-													dbName: bucketName,
-													emptyBucket: true,
-													indexes: [],
-													bucketIndexes: indexes,
-													views: [],
-													validation: false,
-													bucketInfo
-												};
-
-												collectionPackages.push(documentsPackage)
-											}
-										} else {
-											docKindsList.forEach(docKindItem => {
-												let newArrayDocuments = documents.filter((item) => {
-													return item[documentKindName] == docKindItem;
-												});
-
-												let documentsPackage = {
-													dbName: bucketName,
-													collectionName: docKindItem,
-													documents: newArrayDocuments || [],
-													indexes: [],
-													bucketIndexes: indexes,
-													views: [],
-													validation: false,
-													docType: documentKindName,
-													bucketInfo
-												};
-
-												if(fieldInference.active === 'field') {
-													documentsPackage.documentTemplate = newArrayDocuments[0] || null;
-												}
-												if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
+										documents  = filterDocuments(documents);
+										let documentKindName = data.documentKinds[bucketName].documentKindName || '*';
+										let docKindsList = data.collectionData.collections[bucketName];
+										let collectionPackages = [];										
+	
+										if (documentKindName !== '*') {
+											if(!docKindsList) {
+												if (includeEmptyCollection) {
+													let documentsPackage = {
+														dbName: bucketName,
+														emptyBucket: true,
+														indexes: [],
+														bucketIndexes: indexes,
+														views: [],
+														validation: false,
+														bucketInfo
+													};
+	
 													collectionPackages.push(documentsPackage)
 												}
-											});
+											} else {
+												docKindsList.forEach(docKindItem => {
+													let newArrayDocuments = documents.filter((item) => {
+														return item[documentKindName] == docKindItem;
+													});
+	
+													let documentsPackage = {
+														dbName: bucketName,
+														collectionName: docKindItem,
+														documents: newArrayDocuments || [],
+														indexes: [],
+														bucketIndexes: indexes,
+														views: [],
+														validation: false,
+														docType: documentKindName,
+														bucketInfo
+													};
+	
+													if(fieldInference.active === 'field') {
+														documentsPackage.documentTemplate = newArrayDocuments[0] || null;
+													}
+													if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
+														collectionPackages.push(documentsPackage)
+													}
+												});
+											}
+										} else {
+											let documentsPackage = {
+												dbName: bucketName,
+												collectionName: bucketName,
+												documents: documents || [],
+												indexes: [],
+												bucketIndexes: indexes,
+												views: [],
+												validation: false,
+												docType: bucketName,
+												bucketInfo
+											};
+	
+											if(fieldInference.active === 'field'){
+												documentsPackage.documentTemplate = documents[0] || null;
+											}
+											if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
+												collectionPackages.push(documentsPackage);
+											}
 										}
-									} else {
-										let documentsPackage = {
-											dbName: bucketName,
-											collectionName: bucketName,
-											documents: documents || [],
-											indexes: [],
-											bucketIndexes: indexes,
-											views: [],
-											validation: false,
-											docType: bucketName,
-											bucketInfo
-										};
-
-										if(fieldInference.active === 'field'){
-											documentsPackage.documentTemplate = documents[0] || null;
-										}
-										if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
-											collectionPackages.push(documentsPackage);
-										}
+	
+										return collItemCallback(err, collectionPackages);
 									}
-
-									return collItemCallback(err, collectionPackages);
-								}
-							});
-						}
+								});
+							}
+						});
 					});
 				}, (err, items) => {
 					if(err){
@@ -521,4 +539,64 @@ function createError(code, message) {
 	message = message.message || message.msg || message.errmsg || message;
 
 	return {code, message};
+}
+
+const getShardingKey = (db, collectionName) => new Promise((resolve, reject) => {
+	db.command({
+		customAction: 'GetCollection',
+		collection: collectionName
+	}, (err, result) => {
+		if (err) {
+			return reject(err);
+		}
+
+		if (!result.shardKeyDefinition) {
+			return resolve('');
+		}
+
+		const shardingKey = Object.keys(result.shardKeyDefinition).join(',');
+
+		return resolve(shardingKey);
+	});
+});
+const getUniqueKeys = (db, collectionName) => new Promise((resolve, reject) => {
+	db.command({
+		listIndexes: collectionName
+	}, (err, result) => {
+		if (err) {
+			return reject(err);
+		}
+
+		if (!result.cursor && !Array.isArray(result.cursor.firstBatch)) {
+			return resolve([]);
+		}
+
+		const uniqueKeys = result.cursor.firstBatch.filter(item => {
+			return item.unique;
+		}).map((item) => {
+			return {
+				attributePath: Object.keys(item.key).join(',')
+			};
+		});
+
+		resolve(uniqueKeys);
+	});
+});
+
+function getBucketInfo(dbInstance, collectionName, cb) {
+	const bucketInfo = {};
+
+	Promise.all([
+		getShardingKey(dbInstance, collectionName).then(result => {
+			bucketInfo.shardKey = result;
+		}),
+		getUniqueKeys(dbInstance, collectionName).then(result => {
+			bucketInfo.uniqueKey = result;
+		})
+	]).then(() => {
+		cb(null, bucketInfo);
+	}, err => {
+		cb(err, bucketInfo);
+	});
+
 }
