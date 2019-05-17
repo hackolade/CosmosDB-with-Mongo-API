@@ -13,14 +13,12 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Simple text",
 				"propertyKeyword": "simpletextProp",
-				"shouldValidate": false,
 				"propertyType": "text",
 				"sampleGen": "&containerName|&entityName|&random|<value>"
 			},
 			{
 				"propertyName": "Text area",
 				"propertyKeyword": "textareaProp",
-				"propertyValidate": false,
 				"propertyTooltip": "Popup for multi-line text entry",
 				"propertyType": "details",
 				"template": "textarea"
@@ -28,7 +26,6 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Dropdown selection",
 				"propertyKeyword": "dropdownProp",
-				"shouldValidate": false,
 				"propertyTooltip": "Select from list of options",
 				"propertyType": "select",
 				"options": [
@@ -50,7 +47,6 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Checkbox",
 				"propertyKeyword": "checkboxProp",
-				"shouldValidate": false,
 				"propertyType": "checkbox"
 			},
 			{
@@ -62,14 +58,12 @@ making sure that you maintain a proper JSON format.
 					{
 						"propertyName": "Simple Grp Text",
 						"propertyKeyword": "simpleGrpText",
-						"shouldValidate": false,
 						"propertyTooltip": "",
 						"propertyType": "text"
 					},
 					{
 						"propertyName": "Group Number",
 						"propertyKeyword": "grpNumber",
-						"propertyValidate": true,
 						"propertyType": "numeric",
 						"valueType": "number",
 						"allowNegative": false
@@ -84,20 +78,17 @@ making sure that you maintain a proper JSON format.
 				"propertyName": "Block",
 				"propertyType": "block",
 				"propertyKeyword": "grpProp",
-				"shouldValidate": false,
 				"propertyTooltip": "",
 				"structure": [
 					{
 						"propertyName": "Simple Grp Text",
 						"propertyKeyword": "simpleGrpText",
-						"shouldValidate": false,
 						"propertyTooltip": "",
 						"propertyType": "text"
 					},
 					{
 						"propertyName": "Group Number",
 						"propertyKeyword": "grpNumber",
-						"propertyValidate": true,
 						"propertyType": "numeric",
 						"valueType": "number",
 						"allowNegative": false
@@ -107,14 +98,12 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Field List",
 				"propertyKeyword": "keyList",
-				"shouldValidate": false,
 				"propertyType": "fieldList",
 				"template": "orderedList"
 			}, 
 			{
 				"propertyName": "List with attribute",
 				"propertyKeyword": "keyListOrder",
-				"shouldValidate": false,
 				"propertyType": "fieldList",
 				"template": "orderedList",
 				"attributeList": [

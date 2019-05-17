@@ -13,14 +13,12 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Simple text",
 				"propertyKeyword": "simpletextProp",
-				"shouldValidate": false,
 				"propertyType": "text",
 				"sampleGen": "&containerName|&entityName|&random|<value>"
 			},
 			{
 				"propertyName": "Text area",
 				"propertyKeyword": "textareaProp",
-				"propertyValidate": false,
 				"propertyTooltip": "Popup for multi-line text entry",
 				"propertyType": "details",
 				"template": "textarea"
@@ -28,7 +26,6 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Dropdown selection",
 				"propertyKeyword": "dropdownProp",
-				"shouldValidate": false,
 				"propertyTooltip": "Select from list of options",
 				"propertyType": "select",
 				"options": [
@@ -50,7 +47,6 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Checkbox",
 				"propertyKeyword": "checkboxProp",
-				"shouldValidate": false,
 				"propertyType": "checkbox"
 			},
 			{
@@ -62,14 +58,12 @@ making sure that you maintain a proper JSON format.
 					{
 						"propertyName": "Simple Grp Text",
 						"propertyKeyword": "simpleGrpText",
-						"shouldValidate": false,
 						"propertyTooltip": "",
 						"propertyType": "text"
 					},
 					{
 						"propertyName": "Group Number",
 						"propertyKeyword": "grpNumber",
-						"propertyValidate": true,
 						"propertyType": "numeric",
 						"valueType": "number",
 						"allowNegative": false
@@ -84,20 +78,17 @@ making sure that you maintain a proper JSON format.
 				"propertyName": "Block",
 				"propertyType": "block",
 				"propertyKeyword": "grpProp",
-				"shouldValidate": false,
 				"propertyTooltip": "",
 				"structure": [
 					{
 						"propertyName": "Simple Grp Text",
 						"propertyKeyword": "simpleGrpText",
-						"shouldValidate": false,
 						"propertyTooltip": "",
 						"propertyType": "text"
 					},
 					{
 						"propertyName": "Group Number",
 						"propertyKeyword": "grpNumber",
-						"propertyValidate": true,
 						"propertyType": "numeric",
 						"valueType": "number",
 						"allowNegative": false
@@ -107,14 +98,12 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Field List",
 				"propertyKeyword": "keyList",
-				"shouldValidate": false,
 				"propertyType": "fieldList",
 				"template": "orderedList"
 			}, 
 			{
 				"propertyName": "List with attribute",
 				"propertyKeyword": "keyListOrder",
-				"shouldValidate": false,
 				"propertyType": "fieldList",
 				"template": "orderedList",
 				"attributeList": [
@@ -159,7 +148,6 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Description",
 				"propertyKeyword": "description",
-				"shouldValidate": false,
 				"propertyTooltip": "description",
 				"propertyType": "details",
 				"template": "textarea"
@@ -167,7 +155,6 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Storage Capacity",
 				"propertyKeyword": "storageCapacity",
-				"shouldValidate": false,
 				"propertyTooltip": "A database is a logical container of one or more collections",
 				"propertyType": "select",
 				"options": [
@@ -178,7 +165,6 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Throughput (RU/s)",
 				"propertyKeyword": "throughput",
-				"shouldValidate": true,
 				"propertyTooltip": "Each collection can be provisionned throughput in Request Units (RU) per second. 1 RU coresponds to the throughput of a read of a 1 KB document.",
 				"propertyType": "numeric",
 				"valueType": "number"
@@ -186,7 +172,6 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "RU per minute",
 				"propertyKeyword": "rump",
-				"shouldValidate": false,
 				"propertyTooltip": "For each 100 RU per second provisioned, 1000 RU per minute can be provisioned.",
 				"propertyType": "select",
 				"options": [
@@ -197,7 +182,6 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Time to live",
 				"propertyKeyword": "TTL",
-				"shouldValidate": false,
 				"propertyTooltip": "Time to live",
 				"propertyType": "select",
 				"options": [
@@ -209,15 +193,13 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "TTL default seconds",
 				"propertyKeyword": "TTLseconds",
-				"shouldValidate": true,
 				"propertyTooltip": "TTL in seconds if TTL is ON",
 				"propertyType": "numeric",
 				"valueType": "number"
 			},
 			{
-				"propertyName": "Partition key",
-				"propertyKeyword": "partitionKey",
-				"shouldValidate": false,
+				"propertyName": "Shard key",
+				"propertyKeyword": "shardKey",
 				"propertyTooltip": "The Partition Key is a string only used to automatically partition data among multiple servers for scalability.  Choose a JSON property name that has a wide range of values and is likely to have evenly distributed access patterns.",
 				"propertyType": "text",
 				"valueType": "string"
@@ -225,13 +207,17 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Unique keys",
 				"propertyKeyword": "uniqueKey",
-				"propertyType": "fieldList",
-				"template": "orderedList"
-			}, 
+				"propertyType": "group",
+				"structure": [{
+					"propertyName": "Attribute path",
+					"propertyKeyword": "attributePath",
+					"propertyTooltip": "Comma separated paths",
+					"propertyType": "text"
+				}]
+			},
 			{
 				"propertyName": "Comments",
 				"propertyKeyword": "comments",
-				"shouldValidate": false,
 				"propertyTooltip": "comments",
 				"propertyType": "details",
 				"template": "textarea"
@@ -244,20 +230,17 @@ making sure that you maintain a proper JSON format.
 			"propertyName": "Indexes",
 			"propertyType": "group",
 			"propertyKeyword": "indexes",
-			"shouldValidate": false,
 			"propertyTooltip": "",
 			"structure": [
 				{
 					"propertyName": "Name",
 					"propertyKeyword": "name",
-					"shouldValidate": false,
 					"propertyTooltip": "",
 					"propertyType": "text"
 				},
 				{
 					"propertyName": "Description",
 					"propertyKeyword": "indexDescription",
-					"shouldValidate": false,
 					"propertyTooltip": "description",
 					"propertyType": "details",
 					"template": "textarea"
@@ -265,7 +248,6 @@ making sure that you maintain a proper JSON format.
 				{
 					"propertyName": "Automatic",
 					"propertyKeyword": "automatic",
-					"shouldValidate": false,
 					"propertyTooltip": "Automatic indexing: true or false",
 					"propertyType": "select",
 					"options": [
@@ -276,7 +258,6 @@ making sure that you maintain a proper JSON format.
 				{
 					"propertyName": "Mode",
 					"propertyKeyword": "mode",
-					"shouldValidate": false,
 					"propertyTooltip": "Indexing mode: consistent, lazy, or none",
 					"propertyType": "select",
 					"options": [
@@ -288,15 +269,14 @@ making sure that you maintain a proper JSON format.
 				{
 					"propertyName": "Included path",
 					"propertyKeyword": "indexIncludedPath",
-					"shouldValidate": false,
 					"propertyTooltip": "Included path index expression",
 					"propertyType": "details",
-					"template": "textarea"
+					"template": "textarea",
+					"markdown": false
 				},
 				{
 					"propertyName": "Kind",
 					"propertyKeyword": "kind",
-					"shouldValidate": false,
 					"propertyTooltip": "Index kind: Hash (equality queries), Range (equality, range or Order By queries), or Spatial (spatial queries)",
 					"propertyType": "select",
 					"options": [
@@ -308,7 +288,6 @@ making sure that you maintain a proper JSON format.
 				{
 					"propertyName": "Data type",
 					"propertyKeyword": "dataType",
-					"shouldValidate": false,
 					"propertyTooltip": "Data type: String, Number, Point, Polygon, or LineString (can contain only one entry per data type per path)",
 					"propertyType": "select",
 					"options": [
@@ -322,7 +301,6 @@ making sure that you maintain a proper JSON format.
 				{
 					"propertyName": "Precision",
 					"propertyKeyword": "indexPrecision",
-					"shouldValidate": false,
 					"propertyTooltip": "1-8 or -1 (Maximum precision) for numbers, 1-100 (Maximum precision) for string",
 					"propertyType": "text",
 					"valueType": "number"
@@ -330,15 +308,14 @@ making sure that you maintain a proper JSON format.
 				{
 					"propertyName": "Excluded path",
 					"propertyKeyword": "indexExcludedPath",
-					"shouldValidate": false,
 					"propertyTooltip": "Excluded path index expression",
 					"propertyType": "details",
-					"template": "textarea"
+					"template": "textarea",
+					"markdown": false
 				},
 				{
 					"propertyName": "Comments",
 					"propertyKeyword": "indexComments",
-					"shouldValidate": false,
 					"propertyTooltip": "comments",
 					"propertyType": "details",
 					"template": "textarea"
@@ -352,27 +329,23 @@ making sure that you maintain a proper JSON format.
 			"propertyName": "Stored Procs",
 			"propertyType": "group",
 			"propertyKeyword": "storedProcs",
-			"shouldValidate": false,
 			"propertyTooltip": "",
 			"structure": [
 				{
 					"propertyName": "Name",
 					"propertyKeyword": "name",
-					"shouldValidate": false,
 					"propertyTooltip": "",
 					"propertyType": "text"
 				},
 				{
 					"propertyName": "Id",
 					"propertyKeyword": "storedProcID",
-					"shouldValidate": false,
 					"propertyTooltip": "Stored procedure unique name",
 					"propertyType": "text"
 				},
 				{
 					"propertyName": "Description",
 					"propertyKeyword": "storedProcDescription",
-					"shouldValidate": false,
 					"propertyTooltip": "description",
 					"propertyType": "details",
 					"template": "textarea"
@@ -380,15 +353,14 @@ making sure that you maintain a proper JSON format.
 				{
 					"propertyName": "Function",
 					"propertyKeyword": "storedProcFunction",
-					"shouldValidate": false,
-					"propertyTooltip": "description",
+					"propertyTooltip": "Stored procedure function",
 					"propertyType": "details",
-					"template": "textarea"
+					"template": "textarea",
+					"markdown": false
 				},
 				{
 					"propertyName": "Comments",
 					"propertyKeyword": "storedProcComments",
-					"shouldValidate": false,
 					"propertyTooltip": "comments",
 					"propertyType": "details",
 					"template": "textarea"
@@ -402,27 +374,23 @@ making sure that you maintain a proper JSON format.
 			"propertyName": "Triggers",
 			"propertyType": "group",
 			"propertyKeyword": "triggers",
-			"shouldValidate": false,
 			"propertyTooltip": "",
 			"structure": [
 				{
 					"propertyName": "Name",
 					"propertyKeyword": "name",
-					"shouldValidate": false,
 					"propertyTooltip": "",
 					"propertyType": "text"
 				},
 				{
 					"propertyName": "Id",
 					"propertyKeyword": "triggerID",
-					"shouldValidate": false,
 					"propertyTooltip": "Stored procedure unique name",
 					"propertyType": "text"
 				},
 				{
 					"propertyName": "Description",
 					"propertyKeyword": "triggerDescription",
-					"shouldValidate": false,
 					"propertyTooltip": "description",
 					"propertyType": "details",
 					"template": "textarea"
@@ -430,7 +398,6 @@ making sure that you maintain a proper JSON format.
 				{
 					"propertyName": "Pre/Post",
 					"propertyKeyword": "prePostTrigger",
-					"shouldValidate": false,
 					"propertyTooltip": "Choose whether pre- or post-trigger",
 					"propertyType": "select",
 					"options": [
@@ -441,7 +408,6 @@ making sure that you maintain a proper JSON format.
 				{
 					"propertyName": "Operation",
 					"propertyKeyword": "triggerOperation",
-					"shouldValidate": false,
 					"propertyTooltip": "Choose operation",
 					"propertyType": "select",
 					"options": [
@@ -454,15 +420,14 @@ making sure that you maintain a proper JSON format.
 				{
 					"propertyName": "Function",
 					"propertyKeyword": "triggerFunction",
-					"shouldValidate": false,
-					"propertyTooltip": "description",
+					"propertyTooltip": "Trigger function",
 					"propertyType": "details",
-					"template": "textarea"
+					"template": "textarea",
+					"markdown": false
 				},
 				{
 					"propertyName": "Comments",
 					"propertyKeyword": "triggerComments",
-					"shouldValidate": false,
 					"propertyTooltip": "comments",
 					"propertyType": "details",
 					"template": "textarea"
@@ -476,27 +441,23 @@ making sure that you maintain a proper JSON format.
 			"propertyName": "UDFs",
 			"propertyType": "group",
 			"propertyKeyword": "udfs",
-			"shouldValidate": false,
 			"propertyTooltip": "",
 			"structure": [
 				{
 					"propertyName": "Name",
 					"propertyKeyword": "name",
-					"shouldValidate": false,
 					"propertyTooltip": "",
 					"propertyType": "text"
 				},
 				{
 					"propertyName": "Id",
 					"propertyKeyword": "udfID",
-					"shouldValidate": false,
 					"propertyTooltip": "Stored procedure unique name",
 					"propertyType": "text"
 				},
 				{
 					"propertyName": "Description",
 					"propertyKeyword": "udfDescription",
-					"shouldValidate": false,
 					"propertyTooltip": "description",
 					"propertyType": "details",
 					"template": "textarea"
@@ -504,15 +465,14 @@ making sure that you maintain a proper JSON format.
 				{
 					"propertyName": "Function",
 					"propertyKeyword": "udfFunction",
-					"shouldValidate": false,
-					"propertyTooltip": "description",
+					"propertyTooltip": "UDF function",
 					"propertyType": "details",
-					"template": "textarea"
+					"template": "textarea",
+					"markdown": false
 				},
 				{
 					"propertyName": "Comments",
 					"propertyKeyword": "udfComments",
-					"shouldValidate": false,
 					"propertyTooltip": "comments",
 					"propertyType": "details",
 					"template": "textarea"

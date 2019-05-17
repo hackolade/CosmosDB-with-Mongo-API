@@ -13,14 +13,12 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Simple text",
 				"propertyKeyword": "simpletextProp",
-				"shouldValidate": false,
 				"propertyType": "text",
 				"sampleGen": "&containerName|&entityName|&random|<value>"
 			},
 			{
 				"propertyName": "Text area",
 				"propertyKeyword": "textareaProp",
-				"propertyValidate": false,
 				"propertyTooltip": "Popup for multi-line text entry",
 				"propertyType": "details",
 				"template": "textarea"
@@ -28,7 +26,6 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Dropdown selection",
 				"propertyKeyword": "dropdownProp",
-				"shouldValidate": false,
 				"propertyTooltip": "Select from list of options",
 				"propertyType": "select",
 				"options": [
@@ -50,7 +47,6 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Checkbox",
 				"propertyKeyword": "checkboxProp",
-				"shouldValidate": false,
 				"propertyType": "checkbox"
 			},
 			{
@@ -62,14 +58,12 @@ making sure that you maintain a proper JSON format.
 					{
 						"propertyName": "Simple Grp Text",
 						"propertyKeyword": "simpleGrpText",
-						"shouldValidate": false,
 						"propertyTooltip": "",
 						"propertyType": "text"
 					},
 					{
 						"propertyName": "Group Number",
 						"propertyKeyword": "grpNumber",
-						"propertyValidate": true,
 						"propertyType": "numeric",
 						"valueType": "number",
 						"allowNegative": false
@@ -84,20 +78,17 @@ making sure that you maintain a proper JSON format.
 				"propertyName": "Block",
 				"propertyType": "block",
 				"propertyKeyword": "grpProp",
-				"shouldValidate": false,
 				"propertyTooltip": "",
 				"structure": [
 					{
 						"propertyName": "Simple Grp Text",
 						"propertyKeyword": "simpleGrpText",
-						"shouldValidate": false,
 						"propertyTooltip": "",
 						"propertyType": "text"
 					},
 					{
 						"propertyName": "Group Number",
 						"propertyKeyword": "grpNumber",
-						"propertyValidate": true,
 						"propertyType": "numeric",
 						"valueType": "number",
 						"allowNegative": false
@@ -107,14 +98,12 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Field List",
 				"propertyKeyword": "keyList",
-				"shouldValidate": false,
 				"propertyType": "fieldList",
 				"template": "orderedList"
 			}, 
 			{
 				"propertyName": "List with attribute",
 				"propertyKeyword": "keyListOrder",
-				"shouldValidate": false,
 				"propertyType": "fieldList",
 				"template": "orderedList",
 				"attributeList": [
@@ -132,7 +121,6 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "DB vendor",
 				"propertyKeyword": "dbVendor",
-				"shouldValidate": false,
 				"propertyTooltip": "db vendor",
 				"propertyType": "select",
 				"options": [
@@ -143,42 +131,36 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Tenant",
 				"propertyKeyword": "tenant",
-				"shouldValidate": false,
 				"propertyTooltip": "Azure tenant",
 				"propertyType": "text"
 			},
 			{
 				"propertyName": "Account ID",
 				"propertyKeyword": "accountID",
-				"shouldValidate": false,
 				"propertyTooltip": "Azure CosmosDB account ID",
 				"propertyType": "text"
 			},
 			{
 				"propertyName": "Resource group",
 				"propertyKeyword": "resGrp",
-				"shouldValidate": false,
 				"propertyTooltip": "Resource Group",
 				"propertyType": "text"
 			},
 			{
 				"propertyName": "Subscription",
 				"propertyKeyword": "subscription",
-				"shouldValidate": false,
 				"propertyTooltip": "Subscription",
 				"propertyType": "text"
 			},
 			{
 				"propertyName": "Database ID",
 				"propertyKeyword": "dbId",
-				"shouldValidate": false,
 				"propertyTooltip": "A database is a logical container of one or more collections",
 				"propertyType": "text"
 			},
 			{
 				"propertyName": "Preferred location",
 				"propertyKeyword": "preferredLocation",
-				"shouldValidate": false,
 				"propertyTooltip": "Default experience",
 				"propertyType": "select",
 				"options": [
@@ -221,7 +203,6 @@ making sure that you maintain a proper JSON format.
 			},			{
 				"propertyName": "API Experience",
 				"propertyKeyword": "apiExperience",
-				"shouldValidate": false,
 				"propertyTooltip": "Default experience",
 				"propertyType": "select",
 				"options": [
@@ -236,7 +217,6 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Default consistency policy",
 				"propertyKeyword": "defaultConsistency",
-				"shouldValidate": false,
 				"propertyTooltip": "Default consistency policy level",
 				"propertyType": "select",
 				"options": [
@@ -251,7 +231,6 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Comments",
 				"propertyKeyword": "comments",
-				"shouldValidate": false,
 				"propertyTooltip": "comments",
 				"propertyType": "details",
 				"template": "textarea"
