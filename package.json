@@ -1,7 +1,7 @@
 {
 	"name": "CosmosDB-with-Mongo-API",
-	"version": "0.1.11",
-	"versionDate": "2019-03-03",
+	"version": "0.1.12",
+	"versionDate": "2019-05-17",
 	"author": "hackolade",
 	"engines": {
 		"hackolade": "1.10.x",
@@ -15,7 +15,37 @@
 			]
 		},
 		"features": {
-			"nestedCollections": false
+			"nestedCollections": false,
+			"forwardEngineering": {
+				"jsonSchema": {
+					"keepParentType": {
+						"objectId": {
+							"type": "string",
+							"pattern": "^[a-fA-F0-9]{24}$"
+						},
+						"regex": "string",
+						"date": {
+							"type": "string",
+							"format": "date-time"
+						},
+						"timestamp": {
+							"type": "string",
+							"format": "date-time"
+						},
+						"binary": {
+							"type": "string",
+							"mediaType": "image/png",
+							"contentEncoding": "base64"
+						},
+						"JavaScript": "string",
+						"JavaScript(w/scope)": "string",
+						"symbol": "string",
+						"minKey": "number",
+						"maxKey": "number"
+					}
+				}
+			},
+			"enableReverseEngineering": true
 		}
 	},
 	"description": "Hackolade plugin for Azure Cosmos DB with MongoDB API"
