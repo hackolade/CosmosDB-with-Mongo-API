@@ -4,6 +4,7 @@ const async = require('async');
 const _ = require('lodash');
 const MongoClient = require('mongodb').MongoClient;
 const fs = require('fs');
+const CosmosClient = require('./CosmosClient');
 
 const ERROR_CONNECTION = 1;
 const ERROR_DB_LIST = 2;
@@ -172,6 +173,8 @@ module.exports = {
 
 		logger.log('info', { CollectionList: bucketList }, 'Selected collection list', data.hiddenKeys);
 
+		const cosmosClient = new CosmosClient(data.database, data.host, data.password);
+
 		this.connect(data, logger, (err, connection) => {
 			if (err) {
 				logger.progress({ message: 'Error of connecting to the instance.\n ' + err.message, containerName: data.database, entityName: '' });											
@@ -206,104 +209,91 @@ module.exports = {
 					const collection = db.collection(bucketName);
 					logger.progress({ message: 'Collection data loading ...', containerName: data.database, entityName: bucketName });											
 
-					getBucketInfo(db, bucketName, (err, bucketInfo = {}) => {
+					getBucketInfo(db, cosmosClient, bucketName, (err, bucketInfo = {}) => {
 						if (err) {
 							logger.progress({ message: 'Error of getting collection data .\n ' + err.message, containerName: data.database, entityName: bucketName });											
 							logger.log('error', err);
 						}
-						collection.indexes(function(err, collecctionIndexes){
-							if (err){
+
+						logger.progress({ message: 'Collection data has loaded', containerName: data.database, entityName: bucketName });											
+						logger.progress({ message: 'Loading documents...', containerName: data.database, entityName: bucketName });											
+
+						getData(collection, recordSamplingSettings, (err, documents) => {
+							if(err) {
+								logger.progress({ message: 'Error of loading documents.\n ' + err.message, containerName: data.database, entityName: bucketName });											
 								logger.log('error', err);
-								logger.progress({ message: 'Error of getting indexes.\n ' + err.message, containerName: data.database, entityName: bucketName });											
-
-								return collectionItemCallback(err, null);
+								return collItemCallback(err, null);
 							} else {
-								const indexes = collecctionIndexes.filter(index => {
-									delete index.ns;
-									delete index.v;
-									return  index.name;
-								});
-								logger.progress({ message: 'Collection data has loaded', containerName: data.database, entityName: bucketName });											
-								logger.progress({ message: 'Loading documents...', containerName: data.database, entityName: bucketName });											
-	
-								getData(collection, recordSamplingSettings, (err, documents) => {
-									if(err) {
-										logger.progress({ message: 'Error of loading documents.\n ' + err.message, containerName: data.database, entityName: bucketName });											
-										logger.log('error', err);
-										return collItemCallback(err, null);
-									} else {
-										logger.progress({ message: 'Documents have loaded', containerName: data.database, entityName: bucketName });											
+								logger.progress({ message: 'Documents have loaded', containerName: data.database, entityName: bucketName });											
 
-										documents  = filterDocuments(documents);
-										let documentKindName = data.documentKinds[bucketName].documentKindName || '*';
-										let docKindsList = data.collectionData.collections[bucketName];
-										let collectionPackages = [];										
-	
-										if (documentKindName !== '*') {
-											if(!docKindsList) {
-												if (includeEmptyCollection) {
-													let documentsPackage = {
-														dbName: bucketName,
-														emptyBucket: true,
-														indexes: [],
-														bucketIndexes: indexes,
-														views: [],
-														validation: false,
-														bucketInfo
-													};
-	
-													collectionPackages.push(documentsPackage)
-												}
-											} else {
-												docKindsList.forEach(docKindItem => {
-													let newArrayDocuments = documents.filter((item) => {
-														return item[documentKindName] == docKindItem;
-													});
-	
-													let documentsPackage = {
-														dbName: bucketName,
-														collectionName: docKindItem,
-														documents: newArrayDocuments || [],
-														indexes: [],
-														bucketIndexes: indexes,
-														views: [],
-														validation: false,
-														docType: documentKindName,
-														bucketInfo
-													};
-	
-													if(fieldInference.active === 'field') {
-														documentsPackage.documentTemplate = newArrayDocuments[0] || null;
-													}
-													if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
-														collectionPackages.push(documentsPackage)
-													}
-												});
-											}
-										} else {
+								documents  = filterDocuments(documents);
+								let documentKindName = data.documentKinds[bucketName].documentKindName || '*';
+								let docKindsList = data.collectionData.collections[bucketName];
+								let collectionPackages = [];										
+
+								if (documentKindName !== '*') {
+									if(!docKindsList) {
+										if (includeEmptyCollection) {
 											let documentsPackage = {
 												dbName: bucketName,
-												collectionName: bucketName,
-												documents: documents || [],
+												emptyBucket: true,
 												indexes: [],
-												bucketIndexes: indexes,
+												bucketIndexes: [],
 												views: [],
 												validation: false,
-												docType: bucketName,
 												bucketInfo
 											};
-	
-											if(fieldInference.active === 'field'){
-												documentsPackage.documentTemplate = documents[0] || null;
+
+											collectionPackages.push(documentsPackage)
+										}
+									} else {
+										docKindsList.forEach(docKindItem => {
+											let newArrayDocuments = documents.filter((item) => {
+												return item[documentKindName] == docKindItem;
+											});
+
+											let documentsPackage = {
+												dbName: bucketName,
+												collectionName: docKindItem,
+												documents: newArrayDocuments || [],
+												indexes: [],
+												bucketIndexes: [],
+												views: [],
+												validation: false,
+												docType: documentKindName,
+												bucketInfo
+											};
+
+											if(fieldInference.active === 'field') {
+												documentsPackage.documentTemplate = newArrayDocuments[0] || null;
 											}
 											if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
-												collectionPackages.push(documentsPackage);
+												collectionPackages.push(documentsPackage)
 											}
-										}
-	
-										return collItemCallback(err, collectionPackages);
+										});
 									}
-								});
+								} else {
+									let documentsPackage = {
+										dbName: bucketName,
+										collectionName: bucketName,
+										documents: documents || [],
+										indexes: [],
+										bucketIndexes: [],
+										views: [],
+										validation: false,
+										docType: bucketName,
+										bucketInfo
+									};
+
+									if(fieldInference.active === 'field'){
+										documentsPackage.documentTemplate = documents[0] || null;
+									}
+									if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
+										collectionPackages.push(documentsPackage);
+									}
+								}
+
+								return collItemCallback(err, collectionPackages);
 							}
 						});
 					});
@@ -559,7 +549,8 @@ const getShardingKey = (db, collectionName) => new Promise((resolve, reject) => 
 		return resolve(shardingKey);
 	});
 });
-const getUniqueKeys = (db, collectionName) => new Promise((resolve, reject) => {
+
+const getAllTypesIndexes = (db, collectionName) => new Promise((resolve, reject) => {
 	db.command({
 		listIndexes: collectionName
 	}, (err, result) => {
@@ -579,19 +570,40 @@ const getUniqueKeys = (db, collectionName) => new Promise((resolve, reject) => {
 			};
 		});
 
-		resolve(uniqueKeys);
+		const ttlIndex = result.cursor.firstBatch.filter(item => {
+			return item.expireAfterSeconds !== undefined;
+		}).map((item) => {
+			return {
+				expireAfterSeconds: item.expireAfterSeconds,
+				name: item.name,
+				key:  Object.keys(item.key).join(',')
+			};
+		})[0];
+
+		resolve({ uniqueKeys, ttlIndex });
 	});
 });
 
-function getBucketInfo(dbInstance, collectionName, cb) {
-	const bucketInfo = {};
+function getBucketInfo(dbInstance, cosmosClient, collectionName, cb) {
+	let bucketInfo = {};
 
 	Promise.all([
 		getShardingKey(dbInstance, collectionName).then(result => {
 			bucketInfo.shardKey = result;
 		}),
-		getUniqueKeys(dbInstance, collectionName).then(result => {
-			bucketInfo.uniqueKey = result;
+		getAllTypesIndexes(dbInstance, collectionName).then(result => {
+			bucketInfo.uniqueKey = result.uniqueKeys;
+			bucketInfo.ttlIndex = result.ttlIndex;
+		}),
+		cosmosClient.getCollectionWithExtra(collectionName).then(data => {
+			const ttlInfo = getCollectionTTLInfo(data.colls);
+			
+			const triggers = getCollectionTriggers(data.triggers);
+			const udfs = getCollectionUDFS(data.udfs);
+			const storedProcs = getCollectionStoredProcedures(data.sprocs);
+			const indexes = getCollectionIndexes(data.colls.indexingPolicy);
+
+			bucketInfo = Object.assign({}, bucketInfo, ttlInfo, { indexes, triggers, udfs, storedProcs });
 		})
 	]).then(() => {
 		cb(null, bucketInfo);
@@ -599,4 +611,80 @@ function getBucketInfo(dbInstance, collectionName, cb) {
 		cb(err, bucketInfo);
 	});
 
+}
+
+function getCollectionTTLInfo({ defaultTtl }) {
+	switch (defaultTtl) {
+		case undefined:
+			return {
+				TTL: 'Off'
+			}
+		case -1:
+			return { TTL: 'On (no default)' };
+		default:
+			return {
+				TTLseconds: defaultTtl,
+				TTL: 'On'
+			};
+	}
+}
+
+function getCollectionTriggers(triggers = []) {
+	return triggers.map(({ id, triggerType, triggerOperation, body }) => {
+		return {
+			triggerID: id,
+			prePostTrigger: triggerType === 'Pre' ? 'Pre-Trigger' : 'Post-Trigger',
+			triggerOperation,
+			triggerFunction: body
+		}
+	});
+}
+
+function getCollectionUDFS(udfs = []) {
+	return udfs.map(({ id, body }) => {
+		return {
+			udfID: id,
+			udfFunction: body
+		}
+	});
+}
+
+function getCollectionStoredProcedures(sprocs = []) {
+	return sprocs.map(({ id, body }) => {
+		return {
+			storedProcID: id,
+			storedProcFunction: body
+		}
+	});
+}
+
+function getCollectionIndexes(indexingPolicy) {
+	if (!indexingPolicy) {
+		return [];
+	}
+	const { automatic, indexingMode } = indexingPolicy;
+	const mapIndex = (index, includedPath, excludedPath) => {
+		return {
+			automatic: automatic ? 'true' : 'false',
+			mode: indexingMode ? _.capitalize(indexingMode) : 'None',
+			indexIncludedPath: includedPath,
+			kind: index.kind,
+			dataType: index.dataType,
+			indexPrecision: index.precision,
+			indexExcludedPath: excludedPath
+		}
+	}
+	let collectionIndexes = [];
+	
+	_.get(indexingPolicy, 'includedPaths', []).forEach(({ path, indexes = [] }) => {
+		const includedPathIndexes = indexes.map(index => mapIndex(index, path, ''));
+		collectionIndexes = collectionIndexes.concat(includedPathIndexes);
+	})
+
+	_.get(indexingPolicy, 'excludedPaths', []).forEach(({ path, indexes = [] }) => {
+		const excludedPathIndexes = indexes.map(index => mapIndex(index, '', path));
+		collectionIndexes = collectionIndexes.concat(excludedPathIndexes);
+	})
+
+	return collectionIndexes;
 }

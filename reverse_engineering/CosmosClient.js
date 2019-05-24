@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const axios = require('axios');
 
-class CosmoClient {
+class CosmosClient {
 	constructor(dbName, host, masterKey) {
 		this.host = host;
 		this.masterKey = masterKey;
@@ -38,7 +38,12 @@ class CosmoClient {
 
 	getCollectionWithExtra(collectionId) {
 		const dataHandlers = [this.getCollection, this.getUDFS, this.getTriggers, this.getStoredProcs];
-		return Promise.all(dataHandlers.map((handler) => handler.call(this, collectionId)));
+		return Promise.all(
+			dataHandlers.map((handler) => handler.call(this, collectionId))
+		).then(res => res.reduce((acc, { type, data }) => {
+			acc[type] = data;
+			return acc;
+		}, {}));
 	}
 
 	callApi({ url, resourceType = '', resourceId = ''}, method = 'get') {
@@ -89,4 +94,4 @@ class CosmoClient {
 	}
 };
 
-module.exports = CosmoClient;
+module.exports = CosmosClient;

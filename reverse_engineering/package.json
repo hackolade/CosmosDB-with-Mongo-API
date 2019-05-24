@@ -8,5 +8,5 @@
     "axios": "^0.18.0",
     "mongodb": "^2.2.25"
   },
-  "installed": false
+  "installed": true
 }
