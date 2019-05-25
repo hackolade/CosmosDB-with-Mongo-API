@@ -186,7 +186,7 @@ making sure that you maintain a proper JSON format.
 				"propertyType": "select",
 				"options": [
 					"Off",
-					"On (no default",
+					"On (no default)",
 					"On"
 				]
 			},
@@ -213,6 +213,27 @@ making sure that you maintain a proper JSON format.
 					"propertyKeyword": "attributePath",
 					"propertyTooltip": "Comma separated paths",
 					"propertyType": "text"
+				}]
+			},
+			{
+				"propertyName": "TTL index",
+				"propertyKeyword": "ttlIndex",
+				"propertyType": "block",
+				"structure": [{
+					"propertyName": "Name",
+					"propertyKeyword": "name",
+					"propertyTooltip": "",
+					"propertyType": "text"
+				}, {
+					"propertyName": "Key",
+					"propertyKeyword": "key",
+					"propertyTooltip": "",
+					"propertyType": "text"
+				}, {
+					"propertyName": "Expire after seconds",
+					"propertyKeyword": "expireAfterSeconds",
+					"propertyTooltip": "",
+					"propertyType": "numeric"
 				}]
 			},
 			{
