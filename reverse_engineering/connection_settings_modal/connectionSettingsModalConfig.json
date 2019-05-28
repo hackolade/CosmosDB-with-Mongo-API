@@ -31,6 +31,12 @@
 				"inputType": "text",
 				"inputTooltip": "Specify the port number of the instance",
 				"inputPlaceholder": "10255"
+			},
+			{
+				"inputLabel": "Connection to Azure Cosmos Emulator",
+				"inputKeyword": "isLocal",
+				"inputType": "checkbox",
+				"inputTooltip": "Check this if you wont to connect to CosmosDB local emulator"
 			}
 		]
 	},

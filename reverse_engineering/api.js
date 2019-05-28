@@ -173,7 +173,7 @@ module.exports = {
 
 		logger.log('info', { CollectionList: bucketList }, 'Selected collection list', data.hiddenKeys);
 
-		const cosmosClient = new CosmosClient(data.database, data.host, data.password);
+		const cosmosClient = new CosmosClient(data.database, data.host, data.password, data.isLocal);
 
 		this.connect(data, logger, (err, connection) => {
 			if (err) {
