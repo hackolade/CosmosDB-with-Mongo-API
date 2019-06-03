@@ -2,10 +2,14 @@ const crypto = require('crypto');
 const axios = require('axios');
 
 class CosmosClient {
-	constructor(dbName, host, masterKey) {
-		this.host = host;
+	constructor(dbName, host, masterKey, isLocal) {
+		this.host = isLocal ? `${host}:8081` : host;
 		this.masterKey = masterKey;
 		this.dbName = dbName;
+
+		if (isLocal) {
+			process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+		}
 	}
 
 	getUDFS(collectionId) {
