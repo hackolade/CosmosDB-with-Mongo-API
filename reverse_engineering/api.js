@@ -20,14 +20,12 @@ module.exports = {
 		logger.log('info', connectionInfo, 'Reverse-Engineering connection settings', connectionInfo.hiddenKeys);
 		
 		generateConnectionParams(connectionInfo, logger, params => {
-			MongoClient.connect(params.url, params.options, function (err, dbConnection) {
-				if (err) {
-					logger.log('error', [params, err], "Connection error");
-					return cb(createError(ERROR_CONNECTION, err));
-				} else {
-					return cb(null, dbConnection);
-				}
-			});
+			MongoClient.connect(params.url, params.options)
+			.then(connection => cb(null, connection))
+			.catch(err => {
+				logger.log('error', [params, err], "Connection error");
+				return cb(createError(ERROR_CONNECTION, err));
+			})
 		});
 	},
 
@@ -52,7 +50,8 @@ module.exports = {
 				logger.log('error', err);
 				return cb(err);
 			} else {
-				connection.admin().listDatabases((err, dbs) => {
+				const db = connection.db();
+				db.admin().listDatabases((err, dbs) => {
 					if(err) {
 						logger.log('error', err);
 						connection.close();
@@ -474,9 +473,10 @@ function getSampleDocSize(count, recordSamplingSettings) {
 
 function generateConnectionParams(connectionInfo, logger, cb){
 	cb({
-		url: `mongodb://${connectionInfo.userName}:${connectionInfo.password}@${connectionInfo.host}:${connectionInfo.port}`,
+		url: `mongodb://${connectionInfo.userName}:${connectionInfo.password}@${connectionInfo.host}:${connectionInfo.port}?ssl=true`,
 		options: {
-			ssl: true
+			sslValidate:false,
+			useNewUrlParser: true
 		}
 	});
 }
