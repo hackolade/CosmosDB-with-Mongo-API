@@ -46,7 +46,8 @@
 				}
 			},
 			"enableReverseEngineering": true,
-			"enableReverseEngineeringDetectionSchemaByContent": true
+			"enableReverseEngineeringDetectionSchemaByContent": true,
+			"enableReversingDateTypeAsISODate": true
 		}
 	},
 	"description": "Hackolade plugin for Azure Cosmos DB with MongoDB API"
