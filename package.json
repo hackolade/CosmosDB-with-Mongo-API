@@ -1,7 +1,7 @@
 {
 	"name": "CosmosDB-with-Mongo-API",
-	"version": "0.1.13",
-	"versionDate": "2019-05-25",
+	"version": "0.1.18",
+	"versionDate": "2020-12-22",
 	"author": "hackolade",
 	"engines": {
 		"hackolade": "1.10.x",
@@ -45,7 +45,8 @@
 					}
 				}
 			},
-			"enableReverseEngineering": true
+			"enableReverseEngineering": true,
+			"enableReverseEngineeringDetectionSchemaByContent": true
 		}
 	},
 	"description": "Hackolade plugin for Azure Cosmos DB with MongoDB API"

@@ -3,6 +3,7 @@
 	"erdAbbreviation": "<ts>",
 	"dtdAbbreviation": "{ts}",
 	"useSample": true,
+	"isNotSelectable": true,
 	"defaultValues": {
 		"primaryKey": false,
 		"relationshipType": "",
