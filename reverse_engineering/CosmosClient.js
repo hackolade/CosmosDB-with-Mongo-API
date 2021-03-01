@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const axios = require('axios');
+const qs = require('qs');
 
 class CosmosClient {
 	constructor(dbName, host, masterKey, isLocal) {
@@ -40,11 +41,15 @@ class CosmosClient {
 			.then(data => ({ type: resourceType, data }));
 	}
 
-	getCollectionWithExtra(collectionId) {
+	getCollectionWithExtra(collectionId, logger) {
 		const dataHandlers = [this.getCollection, this.getUDFS, this.getTriggers, this.getStoredProcs];
 		return Promise.all(
-			dataHandlers.map((handler) => handler.call(this, collectionId))
-		).then(res => res.reduce((acc, { type, data }) => {
+			dataHandlers.map((handler) => handler.call(this, collectionId).catch(err => {
+				if (typeof logger === 'function') {
+					logger(err);
+				}
+			}))
+		).then(res => res.filter(Boolean).reduce((acc, { type, data }) => {
 			acc[type] = data;
 			return acc;
 		}, {}));
@@ -68,9 +73,9 @@ class CosmosClient {
 	getAuthToken(verb = '', resourceType = '', resourceId = '', date) {
 		const MasterToken = 'master';
 		const TokenVersion = '1.0';
-		const key = new Buffer(this.masterKey, 'base64');
+		const key = Buffer.from(this.masterKey, 'base64');
 		const text = `${verb}\n${resourceType}\n${resourceId}\n${date.toLowerCase()}\n\n`;
-		const body = new Buffer(text, 'utf8');
+		const body = Buffer.from(text, 'utf8');
 
 		const signature = crypto.createHmac('sha256', key).update(body).digest('base64');
 
@@ -94,6 +99,59 @@ class CosmosClient {
 			url,
 			resourceId,
 			resourceType
+		};
+	}
+
+	async getAdditionalAccountInfo(connectionInfo) {
+		const {
+			clientId,
+			appSecret,
+			tenantId,
+			subscriptionId,
+			resourceGroupName,
+			host
+		} = connectionInfo;
+		const accNameRegex = /(https:\/\/)?(.+)\.documents.+/i;
+		const accountName = accNameRegex.test(host) ? accNameRegex.exec(host)[2] : '';
+		const tokenBaseURl = `https://login.microsoftonline.com/${tenantId}/oauth2/token`;
+		const { data: tokenData } = await axios({
+			method: 'post',
+			url: tokenBaseURl,
+			data: qs.stringify({
+				grant_type: 'client_credentials',
+				client_id: clientId,
+				client_secret: appSecret,
+				resource: 'https://management.azure.com/'
+			}),
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			}
+		});
+		const dbAccountBaseUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/${accountName}?api-version=2015-04-08`;
+		const { data: accountData } = await axios({
+			method: 'get',
+			url: dbAccountBaseUrl,
+			headers: {
+				'Authorization': `${tokenData.token_type} ${tokenData.access_token}`
+			}
+		});
+
+		return {
+			enableMultipleWriteLocations: accountData.properties.enableMultipleWriteLocations,
+			enableAutomaticFailover: accountData.properties.enableAutomaticFailover,
+			isVirtualNetworkFilterEnabled: accountData.properties.isVirtualNetworkFilterEnabled,
+			virtualNetworkRules: accountData.properties.virtualNetworkRules.map(({ id, ignoreMissingVNetServiceEndpoint }) => ({
+				virtualNetworkId: id,
+				ignoreMissingVNetServiceEndpoint
+			})),
+			ipRangeFilter: accountData.properties.ipRangeFilter,
+			tags: Object.entries(accountData.tags).map(([tagName, tagValue]) => ({ tagName, tagValue })),
+			locations: accountData.properties.locations.map(({ id, locationName, failoverPriority, isZoneRedundant }) => ({
+				locationId: id,
+				locationName,
+				failoverPriority,
+				isZoneRedundant
+			}))
 		};
 	}
 };

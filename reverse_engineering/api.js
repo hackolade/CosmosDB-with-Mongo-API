@@ -174,12 +174,14 @@ module.exports = {
 
 		const cosmosClient = new CosmosClient(data.database, data.host, data.password, data.isLocal);
 
-		this.connect(data, logger, (err, connection) => {
+		this.connect(data, logger, async (err, connection) => {
 			if (err) {
 				logger.progress({ message: 'Error of connecting to the instance.\n ' + err.message, containerName: data.database, entityName: '' });											
 				logger.log('error', err);
 				return cb(err);
-			} else {
+			}
+			
+			try {
 				const db = connection.db(data.database);
 
 				if (!db) {
@@ -196,19 +198,35 @@ module.exports = {
 					version: []
 				};
 
-				db.admin().buildInfo((err, info) => {
-					if (err) {
-						return;
+				await Promise.all([
+					getBuildInfo(db).catch(err => {
+						logger.progress({ message: 'Error while getting version: ' + err.message, containerName: data.database, entityName: '' });
+						logger.log('error', err);
+					}),
+					data.includeAccountInformation
+						? cosmosClient.getAdditionalAccountInfo(data).catch(err => {
+							logger.progress({ message: 'Error while getting control pane data: ' + err.message, containerName: data.database, entityName: '' });
+							logger.log('error', err);
+
+							return {};
+						})
+						: Promise.resolve({}),
+				]).then(([ buildInfo, controlPaneData ]) => {
+					modelInfo = {
+						...modelInfo,
+						...controlPaneData,
+						version: buildInfo.version,
 					}
-					
-					modelInfo.version = info.version;
 				});
 
 				async.map(bucketList, (bucketName, collItemCallback) => {
 					const collection = db.collection(bucketName);
 					logger.progress({ message: 'Collection data loading ...', containerName: data.database, entityName: bucketName });											
 
-					getBucketInfo(db, cosmosClient, bucketName, (err, bucketInfo = {}) => {
+					getBucketInfo(db, cosmosClient, bucketName, (err) => {
+						logger.progress({ message: 'Error of getting collection data .\n ' + err.message, containerName: data.database, entityName: bucketName });											
+						logger.log('error', err);
+					}, (err, bucketInfo = {}) => {
 						if (err) {
 							logger.progress({ message: 'Error of getting collection data .\n ' + err.message, containerName: data.database, entityName: bucketName });											
 							logger.log('error', err);
@@ -303,10 +321,28 @@ module.exports = {
 					connection.close();
 					return cb(createError(ERROR_COLLECTION_DATA, err), items, modelInfo);
 				});
+			} catch (err) {
+				if(err){
+					logger.log('error', err);
+				}
+				connection.close();
+				return cb(createError(ERROR_COLLECTION_DATA, err));
 			}
 		});
 	}
 };
+
+function getBuildInfo(db) {
+	return new Promise((resolve, reject) => {
+		db.admin().buildInfo((err, info) => {
+			if (err) {
+				reject(err);
+			} else {
+				resolve(info);
+			}
+		});
+	});
+}
 
 function getSamplingInfo(recordSamplingSettings, fieldInference){
 	let samplingInfo = {};
@@ -476,13 +512,14 @@ function generateConnectionParams(connectionInfo, logger, cb){
 		url: `mongodb://${connectionInfo.userName}:${connectionInfo.password}@${connectionInfo.host}:${connectionInfo.port}?ssl=true`,
 		options: {
 			sslValidate:false,
-			useNewUrlParser: true
+			useNewUrlParser: true,
+			useUnifiedTopology: true,
 		}
 	});
 }
 
 function getData(collection, sampleSettings, callback) {
-	collection.count((err, count) => {
+	collection.countDocuments((err, count) => {
 		const amount = !err && count > 0 ? count : 1000;								
 		const size = +getSampleDocSize(amount, sampleSettings) || 1000;
 		const iterations = size > 1000 ? Math.ceil(size / 1000) : 1;
@@ -584,18 +621,18 @@ const getAllTypesIndexes = (db, collectionName) => new Promise((resolve, reject)
 	});
 });
 
-function getBucketInfo(dbInstance, cosmosClient, collectionName, cb) {
+function getBucketInfo(dbInstance, cosmosClient, collectionName, logError, cb) {
 	let bucketInfo = {};
 
 	Promise.all([
 		getShardingKey(dbInstance, collectionName).then(result => {
 			bucketInfo.shardKey = result;
-		}),
+		}, logError),
 		getAllTypesIndexes(dbInstance, collectionName).then(result => {
 			bucketInfo.uniqueKey = result.uniqueKeys;
 			bucketInfo.ttlIndex = result.ttlIndex;
-		}),
-		cosmosClient.getCollectionWithExtra(collectionName).then(data => {
+		}, logError),
+		cosmosClient.getCollectionWithExtra(collectionName, logError).then(data => {
 			const ttlInfo = getCollectionTTLInfo(data.colls);
 			
 			const triggers = getCollectionTriggers(data.triggers);
@@ -604,7 +641,7 @@ function getBucketInfo(dbInstance, cosmosClient, collectionName, cb) {
 			const indexes = getCollectionIndexes(data.colls.indexingPolicy);
 
 			bucketInfo = Object.assign({}, bucketInfo, ttlInfo, { indexes, triggers, udfs, storedProcs });
-		})
+		}, logError)
 	]).then(() => {
 		cb(null, bucketInfo);
 	}, err => {
