@@ -23,7 +23,7 @@
 				"inputKeyword": "host",
 				"inputType": "text",
 				"inputTooltip": "Specify host IP address or DNS name of the instance",
-				"inputPlaceholder": "<databaseaccount>.documents.azure.com"
+				"inputPlaceholder": "<databaseaccount>.mongo.cosmos.azure.com"
 			},
 			{
 				"inputLabel": "Port",

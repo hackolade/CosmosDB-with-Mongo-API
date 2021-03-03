@@ -41,18 +41,6 @@
 		"viewOn": "",
 		"pipeline": ""
 	},
-	"indexes": {
-		"name": "New Index",
-		"indexDescription": "",
-		"automatic": false,
-		"mode": "Consistent",
-		"indexIncludedPath": "",
-		"kind": "Hash",
-		"dataType": "String",
-		"indexPrecision": "",
-		"indexExcludedPath": "",
-		"indexComments": ""
-	},
 	"storedProcs": {
 		"name": "New Stored Procs",
 		"storedProcID": "",

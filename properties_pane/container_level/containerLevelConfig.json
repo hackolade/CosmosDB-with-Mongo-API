@@ -201,8 +201,14 @@ making sure that you maintain a proper JSON format.
 				"propertyName": "Shard key",
 				"propertyKeyword": "shardKey",
 				"propertyTooltip": "The Partition Key is a string only used to automatically partition data among multiple servers for scalability.  Choose a JSON property name that has a wide range of values and is likely to have evenly distributed access patterns.",
-				"propertyType": "text",
-				"valueType": "string"
+				"propertyType": "fieldList",
+				"template": "orderedList",
+				"templateOptions": {
+					"divider": ".",
+					"front": false,
+					"entityName": false,
+					"maxField": 1
+				}
 			},
 			{
 				"propertyName": "Unique keys",
@@ -211,8 +217,13 @@ making sure that you maintain a proper JSON format.
 				"structure": [{
 					"propertyName": "Attribute path",
 					"propertyKeyword": "attributePath",
-					"propertyTooltip": "Comma separated paths",
-					"propertyType": "text"
+					"propertyType": "fieldList",
+					"template": "orderedList",
+					"templateOptions": {
+						"divider": ".",
+						"front": false,
+						"entityName": false
+					}
 				}]
 			},
 			{
@@ -228,7 +239,14 @@ making sure that you maintain a proper JSON format.
 					"propertyName": "Key",
 					"propertyKeyword": "key",
 					"propertyTooltip": "",
-					"propertyType": "text"
+					"propertyType": "details",
+					"fieldParentCategory": "collection",
+					"template": "pickNameFromBucketFields",
+					"templateOptions": {
+						"nameFieldPath": true,
+						"delimiter": ".",
+						"front": false
+					}
 				}, {
 					"propertyName": "Expire after seconds",
 					"propertyKeyword": "expireAfterSeconds",
@@ -246,11 +264,11 @@ making sure that you maintain a proper JSON format.
 		]
 	},
 	{
-		"lowerTab": "Indexes",
+		"lowerTab": "Old Indexes",
 		"structure": [{
 			"propertyName": "Indexes",
 			"propertyType": "group",
-			"propertyKeyword": "indexes",
+			"propertyKeyword": "oldIndexes",
 			"propertyTooltip": "",
 			"structure": [
 				{
@@ -333,6 +351,138 @@ making sure that you maintain a proper JSON format.
 					"propertyType": "details",
 					"template": "textarea",
 					"markdown": false
+				},
+				{
+					"propertyName": "Comments",
+					"propertyKeyword": "indexComments",
+					"propertyTooltip": "comments",
+					"propertyType": "details",
+					"template": "textarea"
+				}
+			]
+		}]
+	},
+	{
+		"lowerTab": "Indexes",
+		"structure": [{
+			"propertyName": "Indexes",
+			"propertyType": "group",
+			"propertyKeyword": "indexes",
+			"propertyTooltip": "",
+			"structure": [
+				{
+					"propertyName": "Name",
+					"propertyKeyword": "name",
+					"propertyTooltip": "",
+					"propertyType": "text"
+				},
+				{
+					"propertyName": "Description",
+					"propertyKeyword": "indexDescription",
+					"propertyTooltip": "description",
+					"propertyType": "details",
+					"template": "textarea"
+				},
+				{
+					"propertyName": "Type",
+					"propertyKeyword": "indexType",
+					"propertyTooltip": "Index type",
+					"propertyType": "select",
+					"defaultValue": "Single Field",
+					"options": [
+						"Single Field",
+						"Wildcard",
+						"Compound"
+					]
+				},
+				{
+					"propertyName": "Key",
+					"propertyKeyword": "indexKey",
+					"shouldValidate": false,
+					"propertyTooltip": "Index key property",
+					"propertyType": "fieldList",
+					"template": "orderedList",
+					"types": [
+						"ascending",
+						"descending",
+						"2dsphere"
+					],
+					"templateOptions": {
+						"divider": ".",
+						"front": false,
+						"root": false,
+						"entityName": false,
+						"maxField": 1,
+						"ending": {
+							"array": "[]",
+							"default": ""
+						}
+					},
+					"dependency": {
+						"type": "or",
+						"values": [
+							{
+								"key": "indexType",
+								"value": "Single Field"
+							},
+							{
+								"key": "indexType",
+								"exist": false
+							}
+						]
+					}
+				},
+				{
+					"propertyName": "Key",
+					"propertyKeyword": "indexKey",
+					"shouldValidate": false,
+					"propertyTooltip": "Index key property",
+					"propertyType": "fieldList",
+					"template": "orderedList",
+					"types": [
+						"ascending",
+						"descending"
+					],
+					"templateOptions": {
+						"divider": ".",
+						"front": false,
+						"root": true,
+						"rootTemplate": "$**",
+						"entityName": false,
+						"maxField": 1,
+						"ending": {
+							"document": "$**",
+							"array": "$**",
+							"default": ""
+						}
+					},
+					"dependency": {
+						"key": "indexType",
+						"value": "Wildcard"
+					}
+				},
+				{
+					"propertyName": "Key",
+					"propertyKeyword": "indexKey",
+					"shouldValidate": false,
+					"propertyTooltip": "Index key property",
+					"propertyType": "fieldList",
+					"template": "orderedList",
+					"types": [
+						"ascending",
+						"descending"
+					],
+					"templateOptions": {
+						"divider": ".",
+						"front": false,
+						"root": false,
+						"entityName": false,
+						"topLevel": true
+					},
+					"dependency": {
+						"key": "indexType",
+						"value": "Compound"
+					}
 				},
 				{
 					"propertyName": "Comments",
