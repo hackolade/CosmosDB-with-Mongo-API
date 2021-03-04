@@ -318,7 +318,8 @@ making sure that you maintain a proper JSON format.
 						"ending": {
 							"array": "[]",
 							"default": ""
-						}
+						},
+						"addType": false
 					},
 					"dependency": {
 						"type": "or",
@@ -356,7 +357,8 @@ making sure that you maintain a proper JSON format.
 							"document": "$**",
 							"array": "$**",
 							"default": ""
-						}
+						},
+						"addType": false
 					},
 					"dependency": {
 						"key": "indexType",
@@ -379,7 +381,8 @@ making sure that you maintain a proper JSON format.
 						"front": false,
 						"root": false,
 						"entityName": false,
-						"topLevel": true
+						"topLevel": true,
+						"addType": false
 					},
 					"dependency": {
 						"key": "indexType",

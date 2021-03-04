@@ -581,13 +581,13 @@ const getShardingKey = (db, collectionName) => new Promise((resolve, reject) => 
 			return resolve('');
 		}
 
-		const shardingKey = Object.keys(result.shardKeyDefinition).join(',');
+		const shardingKey = Object.keys(result.shardKeyDefinition)[0] || '';
 
 		return resolve(shardingKey);
 	});
 });
 
-const getAllTypesIndexes = (db, collectionName) => new Promise((resolve, reject) => {
+const getAllTypesIndexes = (db, collectionName, shardingKey) => new Promise((resolve, reject) => {
 	db.command({
 		listIndexes: collectionName
 	}, (err, result) => {
@@ -595,54 +595,80 @@ const getAllTypesIndexes = (db, collectionName) => new Promise((resolve, reject)
 			return reject(err);
 		}
 
-		if (!result.cursor && !Array.isArray(result.cursor.firstBatch)) {
-			return resolve([]);
-		}
+		const allIndexes = result?.cursor?.firstBatch || [];
 
-		const uniqueKeys = result.cursor.firstBatch.filter(item => {
+		const uniqueKeys = allIndexes.filter(item => {
 			return item.unique;
 		}).map((item) => {
 			return {
-				attributePath: Object.keys(item.key).join(',')
+				attributePath: Object.keys(item.key).filter(key => key !== shardingKey)
 			};
 		});
 
-		const ttlIndex = result.cursor.firstBatch.filter(item => {
+		const ttlIndex = allIndexes.filter(item => {
 			return item.expireAfterSeconds !== undefined;
 		}).map((item) => {
 			return {
 				expireAfterSeconds: item.expireAfterSeconds,
 				name: item.name,
-				key:  Object.keys(item.key).join(',')
+				key:  Object.keys(item.key)[0],
 			};
 		})[0];
 
-		resolve({ uniqueKeys, ttlIndex });
+		const indexes = allIndexes.filter(index => {
+			return !index.unique && index.expireAfterSeconds === undefined;
+		}).map(index => {
+			const getIndexType = (index) => {
+				const isCompound = Object.values(index.key).length > 1;
+				const isWildcard = Object.keys(index.key).some(key => key.endsWith('$**'));
+
+				if (isCompound) {
+					return 'Compound';
+				} else if (isWildcard) {
+					return 'Wildcard';
+				} else {
+					return 'Single Field';
+				}
+			};
+			const type = (indexType) => {
+				if (indexType === -1) {
+					return 'descending';
+				} else if (indexType === '2dsphere') {
+					return '2dsphere';
+				} else {
+					return 'ascending';
+				}
+			};
+
+			return {
+				name: index.name,
+				indexType: getIndexType(index),
+				indexKey: Object.keys(index.key).map(key => ({
+					type: type(index.key[key]),
+					name: key.replace(/\.\$\*\*$/, ''),
+				}))
+			};
+		});
+
+		resolve({ uniqueKeys, ttlIndex, indexes });
 	});
 });
 
 function getBucketInfo(dbInstance, cosmosClient, collectionName, logError, cb) {
 	let bucketInfo = {};
 
-	Promise.all([
-		getShardingKey(dbInstance, collectionName).then(result => {
-			bucketInfo.shardKey = result;
-		}, logError),
-		getAllTypesIndexes(dbInstance, collectionName).then(result => {
-			bucketInfo.uniqueKey = result.uniqueKeys;
-			bucketInfo.ttlIndex = result.ttlIndex;
-		}, logError),
-		cosmosClient.getCollectionWithExtra(collectionName, logError).then(data => {
-			const ttlInfo = getCollectionTTLInfo(data.colls);
-			
-			const triggers = getCollectionTriggers(data.triggers);
-			const udfs = getCollectionUDFS(data.udfs);
-			const storedProcs = getCollectionStoredProcedures(data.sprocs);
-			const indexes = getCollectionIndexes(data.colls.indexingPolicy);
+	getShardingKey(dbInstance, collectionName)
+	.then(result => {
+		bucketInfo.shardKey = result;
 
-			bucketInfo = Object.assign({}, bucketInfo, ttlInfo, { indexes, triggers, udfs, storedProcs });
-		}, logError)
-	]).then(() => {
+		return getAllTypesIndexes(dbInstance, collectionName, result);
+	}, logError)
+	.then(result => {
+		bucketInfo.uniqueKey = result.uniqueKeys;
+		bucketInfo.ttlIndex = result.ttlIndex;
+		bucketInfo.indexes = result.indexes;
+	}, logError)
+	.then(() => {
 		cb(null, bucketInfo);
 	}, err => {
 		cb(err, bucketInfo);

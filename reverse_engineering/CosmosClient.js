@@ -128,13 +128,17 @@ class CosmosClient {
 			}
 		});
 		const dbAccountBaseUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/${accountName}?api-version=2015-04-08`;
-		const { data: accountData } = await axios({
+		let { data: accountData } = await axios({
 			method: 'get',
 			url: dbAccountBaseUrl,
 			headers: {
 				'Authorization': `${tokenData.token_type} ${tokenData.access_token}`
 			}
 		});
+
+		if (Array.isArray(accountData.value)) {
+			accountData = accountData.value[0];
+		}
 
 		return {
 			enableMultipleWriteLocations: accountData.properties.enableMultipleWriteLocations,
