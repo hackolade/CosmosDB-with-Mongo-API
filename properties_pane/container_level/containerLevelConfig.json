@@ -222,7 +222,8 @@ making sure that you maintain a proper JSON format.
 					"templateOptions": {
 						"divider": ".",
 						"front": false,
-						"entityName": false
+						"entityName": false,
+						"topLevel": true
 					}
 				}]
 			},
@@ -262,105 +263,6 @@ making sure that you maintain a proper JSON format.
 				"template": "textarea"
 			}
 		]
-	},
-	{
-		"lowerTab": "Old Indexes",
-		"structure": [{
-			"propertyName": "Indexes",
-			"propertyType": "group",
-			"propertyKeyword": "oldIndexes",
-			"propertyTooltip": "",
-			"structure": [
-				{
-					"propertyName": "Name",
-					"propertyKeyword": "name",
-					"propertyTooltip": "",
-					"propertyType": "text"
-				},
-				{
-					"propertyName": "Description",
-					"propertyKeyword": "indexDescription",
-					"propertyTooltip": "description",
-					"propertyType": "details",
-					"template": "textarea"
-				},
-				{
-					"propertyName": "Automatic",
-					"propertyKeyword": "automatic",
-					"propertyTooltip": "Automatic indexing: true or false",
-					"propertyType": "select",
-					"options": [
-						"true",
-						"false"
-					]
-				},
-				{
-					"propertyName": "Mode",
-					"propertyKeyword": "mode",
-					"propertyTooltip": "Indexing mode: consistent, lazy, or none",
-					"propertyType": "select",
-					"options": [
-						"Consistent",
-						"Lazy",
-						"None"
-					]
-				},
-				{
-					"propertyName": "Included path",
-					"propertyKeyword": "indexIncludedPath",
-					"propertyTooltip": "Included path index expression",
-					"propertyType": "details",
-					"template": "textarea",
-					"markdown": false
-				},
-				{
-					"propertyName": "Kind",
-					"propertyKeyword": "kind",
-					"propertyTooltip": "Index kind: Hash (equality queries), Range (equality, range or Order By queries), or Spatial (spatial queries)",
-					"propertyType": "select",
-					"options": [
-						"Hash",
-						"Range",
-						"Spatial"
-					]
-				},
-				{
-					"propertyName": "Data type",
-					"propertyKeyword": "dataType",
-					"propertyTooltip": "Data type: String, Number, Point, Polygon, or LineString (can contain only one entry per data type per path)",
-					"propertyType": "select",
-					"options": [
-						"String",
-						"Number",
-						"Point",
-						"Polygon",
-						"LineString"
-					]
-				},
-				{
-					"propertyName": "Precision",
-					"propertyKeyword": "indexPrecision",
-					"propertyTooltip": "1-8 or -1 (Maximum precision) for numbers, 1-100 (Maximum precision) for string",
-					"propertyType": "text",
-					"valueType": "number"
-				},
-				{
-					"propertyName": "Excluded path",
-					"propertyKeyword": "indexExcludedPath",
-					"propertyTooltip": "Excluded path index expression",
-					"propertyType": "details",
-					"template": "textarea",
-					"markdown": false
-				},
-				{
-					"propertyName": "Comments",
-					"propertyKeyword": "indexComments",
-					"propertyTooltip": "comments",
-					"propertyType": "details",
-					"template": "textarea"
-				}
-			]
-		}]
 	},
 	{
 		"lowerTab": "Indexes",
