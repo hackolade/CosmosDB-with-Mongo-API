@@ -4,7 +4,7 @@ const isObjectEmpty = obj => Object.keys(obj).length === 0;
 const filterObject = obj => Object.fromEntries(Object.entries(obj).filter(([key, value]) => value !== undefined));
 
 const createIndexStatement = (...args) => {
-	return 'createIndex(' + args.map(filterObject).filter(arg => !isObjectEmpty(arg)).map(stringify).join(', ') + ')';
+	return 'createIndex(' + args.map(filterObject).filter(arg => !isObjectEmpty(arg)).map(stringify).join(', ') + ');';
 };
 
 const stringify = (data) => JSON.stringify(data, null, 2);
@@ -83,7 +83,7 @@ const getIndexes = (containerData) => {
 		...uniqueIndexes.map(uniqueKey => createUniqueIndex(uniqueKey.attributePath, shardKey)),
 		...indexes.map(createIndex),
 		createTtlIndex(containerData[0]?.ttlIndex),
-	].map(index => getCollection(getContainerName(containerData)) + '.' + index).join(';\n\n');
+	].map(index => getCollection(getContainerName(containerData)) + '.' + index).join('\n\n');
 };
 
 const createShardKey = ({ modelData, containerData }) => {
@@ -137,7 +137,7 @@ const insertSamples = (data) => {
 	const useDb = name ? `use ${name};` : '';
 	const samples = data.entities.map(entityId => insertSample({
 		containerData: data.containerData,
-		entityData: (data.entityData[entityId] || [])[0] || {},
+		entityData: (data.entityData[entityId] || []),
 		sample: JSON.parse(data.jsonData[entityId]),
 	})).join('\n\n');
 

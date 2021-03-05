@@ -2,9 +2,8 @@
 
 const async = require('async');
 const _ = require('lodash');
-const MongoClient = require('mongodb').MongoClient;
-const fs = require('fs');
 const CosmosClient = require('./CosmosClient');
+const connectionHelper = require('./helpers/connectionHelper');
 
 const ERROR_CONNECTION = 1;
 const ERROR_DB_LIST = 2;
@@ -18,15 +17,13 @@ module.exports = {
 	connect: function(connectionInfo, logger, cb){
 		logger.clear();
 		logger.log('info', connectionInfo, 'Reverse-Engineering connection settings', connectionInfo.hiddenKeys);
-		
-		generateConnectionParams(connectionInfo, logger, params => {
-			MongoClient.connect(params.url, params.options)
+
+		connectionHelper.connect(connectionInfo)
 			.then(connection => cb(null, connection))
 			.catch(err => {
 				logger.log('error', [params, err], "Connection error");
 				return cb(createError(ERROR_CONNECTION, err));
-			})
-		});
+			});
 	},
 
 	disconnect: function(connectionInfo, logger, cb){
@@ -505,17 +502,6 @@ function getSampleDocSize(count, recordSamplingSettings) {
 	return (recordSamplingSettings.active === 'absolute')
 		? recordSamplingSettings.absolute.value
 		: Math.round( count/100 * per);
-}
-
-function generateConnectionParams(connectionInfo, logger, cb){
-	cb({
-		url: `mongodb://${connectionInfo.userName}:${connectionInfo.password}@${connectionInfo.host}:${connectionInfo.port}?ssl=true`,
-		options: {
-			sslValidate:false,
-			useNewUrlParser: true,
-			useUnifiedTopology: true,
-		}
-	});
 }
 
 function getData(collection, sampleSettings, callback) {
