@@ -35,16 +35,18 @@ const createIndex = (index) => {
 	);
 };
 
-const createTtlIndex = (ttlIndex = {}) => {
-	if (!ttlIndex.key) {
+const createTtlIndex = (containerData = {}) => {
+	if (containerData.TTL === 'Off' || !containerData.TTL) {
 		return '';
 	}
 
 	return createIndexStatement({
-		[ttlIndex.key]: 1,
+		_ts: 1,
 	}, filterObject({
-		name: ttlIndex.name,
-		expireAfterSeconds: ttlIndex.expireAfterSeconds || 0,
+		name: 'ttl',
+		expireAfterSeconds: containerData.TTL === 'On (no default)'
+			? -1
+			: containerData.TTLseconds,
 	}));
 };
 
@@ -82,8 +84,8 @@ const getIndexes = (containerData) => {
 	return [
 		...uniqueIndexes.map(uniqueKey => createUniqueIndex(uniqueKey.attributePath, shardKey)),
 		...indexes.map(createIndex),
-		createTtlIndex(containerData[0]?.ttlIndex),
-	].map(index => getCollection(getContainerName(containerData)) + '.' + index).join('\n\n');
+		createTtlIndex(containerData[0]),
+	].filter(Boolean).map(index => getCollection(getContainerName(containerData)) + '.' + index).join('\n\n');
 };
 
 const createShardKey = ({ modelData, containerData }) => {

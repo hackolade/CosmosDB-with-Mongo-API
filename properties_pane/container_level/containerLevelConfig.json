@@ -228,34 +228,6 @@ making sure that you maintain a proper JSON format.
 				}]
 			},
 			{
-				"propertyName": "TTL index",
-				"propertyKeyword": "ttlIndex",
-				"propertyType": "block",
-				"structure": [{
-					"propertyName": "Name",
-					"propertyKeyword": "name",
-					"propertyTooltip": "",
-					"propertyType": "text"
-				}, {
-					"propertyName": "Key",
-					"propertyKeyword": "key",
-					"propertyTooltip": "",
-					"propertyType": "details",
-					"fieldParentCategory": "collection",
-					"template": "pickNameFromBucketFields",
-					"templateOptions": {
-						"nameFieldPath": true,
-						"delimiter": ".",
-						"front": false
-					}
-				}, {
-					"propertyName": "Expire after seconds",
-					"propertyKeyword": "expireAfterSeconds",
-					"propertyTooltip": "",
-					"propertyType": "numeric"
-				}]
-			},
-			{
 				"propertyName": "Comments",
 				"propertyKeyword": "comments",
 				"propertyTooltip": "comments",

@@ -97,7 +97,7 @@ module.exports = {
 									logger.log('info', { collectionItem: collectionData.name }, 'Getting documents for current collectionItem', connectionInfo.hiddenKeys);
 									
 									documents  = filterDocuments(documents);
-									let inferSchema = generateCustomInferSchema(collectionData.name, documents, { sampleSize: 20 });
+									let inferSchema = generateCustomInferSchema(documents, { sampleSize: 20 });
 									let documentsPackage = getDocumentKindDataFromInfer({ 
 										bucketName: collectionData.name,
 										inference: inferSchema, 
@@ -393,54 +393,7 @@ function prepareConnectionDataItem(documentTypes, bucketName, database, isEmpty)
 	return connectionDataItem;
 }
 
-function getDocumentKindDataFromInfer(data, probability) {
-	let suggestedDocKinds = [];
-	let otherDocKinds = [];
-	let documentKind = {
-		key: '',
-		probability: 0	
-	};
-
-	if(data.isCustomInfer){
-		let minCount = Infinity;
-		let inference = data.inference.properties;
-
-		for(let key in inference){
-			if(inference[key]["%docs"] >= probability && inference[key].samples.length && typeof inference[key].samples[0] !== 'object'){
-				suggestedDocKinds.push(key);
-
-				if(data.excludeDocKind.indexOf(key) === -1){
-					if(inference[key]["%docs"] >= documentKind.probability && inference[key].samples.length < minCount){
-						minCount = inference[key].samples.length;
-						documentKind.probability = inference[key]["%docs"];
-						documentKind.key = key;
-					}
-				}
-			} else {
-				otherDocKinds.push(key);
-			}
-		}
-	} else {
-		let flavor = (data.flavorValue) ? data.flavorValue.split(',') : data.inference[0].Flavor.split(',');
-		if(flavor.length === 1){
-			suggestedDocKinds = Object.keys(data.inference[0].properties);
-			let matсhedDocKind = flavor[0].match(/([\s\S]*?) \= "?([\s\S]*?)"?$/);
-			documentKind.key = (matсhedDocKind.length) ? matсhedDocKind[1] : '';
-		}
-	}
-
-	let documentKindData = {
-		bucketName: data.bucketName,
-		documentList: suggestedDocKinds,
-		documentKind: documentKind.key,
-		preSelectedDocumentKind: data.preSelectedDocumentKind,
-		otherDocKinds
-	};
-
-	return documentKindData;
-}
-
-function generateCustomInferSchema(bucketName, documents, params){
+function generateCustomInferSchema(documents, params) {
 	function typeOf(obj) {
 		return {}.toString.call(obj).split(' ')[1].slice(0, -1).toLowerCase();
 	};
@@ -476,6 +429,61 @@ function generateCustomInferSchema(bucketName, documents, params){
 		inferSchema.properties[prop]["%docs"] = Math.round((inferSchema.properties[prop]["#docs"] / inferSchema["#docs"] * 100), 2);
 	}
 	return inferSchema;
+}
+
+function getDocumentKindDataFromInfer(data, probability){
+	let suggestedDocKinds = [];
+	let otherDocKinds = [];
+	let documentKind = {
+		key: '',
+		probability: 0	
+	};
+
+	if(data.isCustomInfer){
+		let minCount = Infinity;
+		let inference = data.inference.properties;
+
+		for(let key in inference){
+			if (typeof inference[key].samples[0] === 'object') {
+				continue;
+			}
+
+			if(inference[key]["%docs"] >= probability && inference[key].samples.length){
+				suggestedDocKinds.push(key);
+
+				if(data.excludeDocKind.indexOf(key) === -1){
+					if (inference[key]["%docs"] === documentKind.probability && documentKind.key === 'type') {
+						continue;
+					}
+					
+					if(inference[key]["%docs"] >= documentKind.probability && inference[key].samples.length < minCount){
+						minCount = inference[key].samples.length;
+						documentKind.probability = inference[key]["%docs"];
+						documentKind.key = key;
+					}
+				}
+			} else {
+				otherDocKinds.push(key);
+			}
+		}
+	} else {
+		let flavor = (data.flavorValue) ? data.flavorValue.split(',') : data.inference[0].Flavor.split(',');
+		if(flavor.length === 1){
+			suggestedDocKinds = Object.keys(data.inference[0].properties);
+			let matсhedDocKind = flavor[0].match(/([\s\S]*?) \= "?([\s\S]*?)"?$/);
+			documentKind.key = (matсhedDocKind.length) ? matсhedDocKind[1] : '';
+		}
+	}
+
+	let documentKindData = {
+		bucketName: data.bucketName,
+		documentList: suggestedDocKinds,
+		documentKind: documentKind.key,
+		preSelectedDocumentKind: data.preSelectedDocumentKind,
+		otherDocKinds
+	};
+
+	return documentKindData;
 }
 
 function filterDocuments(documents){
@@ -651,8 +659,12 @@ function getBucketInfo(dbInstance, cosmosClient, collectionName, logError, cb) {
 	}, logError)
 	.then(result => {
 		bucketInfo.uniqueKey = result.uniqueKeys;
-		bucketInfo.ttlIndex = result.ttlIndex;
 		bucketInfo.indexes = result.indexes;
+
+		bucketInfo = {
+			...bucketInfo,
+			...convertTtlIndex(result.ttlIndex),
+		};
 	}, logError)
 	.then(() => {
 		cb(null, bucketInfo);
@@ -736,4 +748,25 @@ function getCollectionIndexes(indexingPolicy) {
 	})
 
 	return collectionIndexes;
+}
+
+function convertTtlIndex(ttlIndex) {
+	let TTL = 'Off';
+
+	if (!ttlIndex) {
+		return { TTL };
+	}
+
+	if (ttlIndex.expireAfterSeconds === -1) {
+		TTL = 'On (no default)';
+	} else {
+		TTL = 'On';
+	}
+
+	const TTLseconds = ttlIndex.expireAfterSeconds;
+
+	return {
+		TTL,
+		TTLseconds,
+	};
 }
