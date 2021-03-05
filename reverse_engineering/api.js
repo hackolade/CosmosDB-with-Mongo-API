@@ -190,7 +190,6 @@ module.exports = {
 				}
 
 				let modelInfo = {
-					dbId: data.database,
 					accountID: data.password,
 					version: []
 				};
@@ -228,6 +227,11 @@ module.exports = {
 							logger.progress({ message: 'Error of getting collection data .\n ' + err.message, containerName: data.database, entityName: bucketName });											
 							logger.log('error', err);
 						}
+
+						bucketInfo = {
+							...bucketInfo,
+							dbId: data.database,
+						};
 
 						logger.progress({ message: 'Collection data has loaded', containerName: data.database, entityName: bucketName });											
 						logger.progress({ message: 'Loading documents...', containerName: data.database, entityName: bucketName });											

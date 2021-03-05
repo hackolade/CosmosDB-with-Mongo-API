@@ -198,6 +198,16 @@ making sure that you maintain a proper JSON format.
 				"valueType": "number"
 			},
 			{
+				"propertyName": "Database ID",
+				"propertyKeyword": "dbId",
+				"shouldValidate": true,
+				"propertyTooltip": "A database is a logical container of one or more containers",
+				"propertyType": "text",
+				"validation": {
+					"required": true
+				}
+			},
+			{
 				"propertyName": "Shard key",
 				"propertyKeyword": "shardKey",
 				"propertyTooltip": "The Partition Key is a string only used to automatically partition data among multiple servers for scalability.  Choose a JSON property name that has a wide range of values and is likely to have evenly distributed access patterns.",

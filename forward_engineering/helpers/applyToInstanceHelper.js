@@ -6,6 +6,10 @@ const applyToInstanceHelper = {
 		let connection;
 		
 		try {
+			if (!data.containerData?.[0]?.dbId) {
+				throw new Error('Database Id is required. Please, set it on the collection properties pane.');
+			}
+
 			connection = await connect(data, logger);
 
 			const mongodbScript = replaceUseCommand(data.script);
@@ -93,11 +97,13 @@ const runMongoDbScript = ({ mongodbScript, logger: loggerInstance, connection })
 
 				return {
 					createIndex(fields, params) {
-						const indexName = params.name || '';
+						const indexName = params.unique ? 'unique' : (params.name || '');
 						const command = () => collection.createIndex(fields, params).then(() => {
 							logger.info(`index ${indexName} created`);
 						}, (error) => {
-							logger.error(error, `index ${indexName} not created`);
+							const errMessage = `index ${indexName} not created`;
+							logger.error(error, errMessage);
+							error.message = errMessage;
 
 							return Promise.reject(error);
 						});
@@ -108,7 +114,9 @@ const runMongoDbScript = ({ mongodbScript, logger: loggerInstance, connection })
 						const command = () => collection.insertOne(data).then(() => {
 							logger.info(`sample inserted`);
 						}).catch(error => {
-							logger.error(error, `sample is not inserted: ${error.message}`);
+							const errMessage = `sample is not inserted: ${error.message}`;
+							logger.error(error, errMessage);
+							error.message = errMessage;
 
 							return Promise.reject(error);
 						});
@@ -123,10 +131,13 @@ const runMongoDbScript = ({ mongodbScript, logger: loggerInstance, connection })
 				const command = () => db.command(commandData).then(() => {
 					logger.info('Create sharding');
 				}).catch(error => {
-					if (error.codeName === 'NamespaceExists') {
+					const doesShardingExist = error.codeName === 'NamespaceExists' || error.code === 9;
+					if (doesShardingExist) {
 						logger.warning('shard key is not created:  ' + error.message, error);
 					} else {
-						logger.error(error, 'error of creation sharding');
+						const errMessage = 'error of creation sharding';
+						logger.error(error, errMessage);
+						error.message = errMessage + ': ' + error.message;
 
 						return Promise.reject(error);
 					}

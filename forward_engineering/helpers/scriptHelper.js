@@ -18,9 +18,15 @@ const getIndexType = (indexType) => {
 };
 
 const createIndex = (index) => {
-	const indexKeys = index?.indexKey;
+	let indexKeys = index?.indexKey;
 
-	if (!Array.isArray(indexKeys) || indexKeys.length === 0) {
+	if (!Array.isArray(indexKeys)) {
+		return '';
+	}
+
+	indexKeys = indexKeys.filter(index => index.name);
+
+	if (indexKeys.length === 0) {
 		return '';
 	}
 
@@ -51,7 +57,13 @@ const createTtlIndex = (containerData = {}) => {
 };
 
 const createUniqueIndex = (uniqueKeys, shardKey) => {
-	if (!Array.isArray(uniqueKeys) || uniqueKeys.length === 0) {
+	if (!Array.isArray(uniqueKeys)) {
+		return '';
+	}
+
+	uniqueKeys = uniqueKeys.filter(index => index.name);
+
+	if (uniqueKeys.length === 0) {
 		return '';
 	}
 
@@ -88,25 +100,25 @@ const getIndexes = (containerData) => {
 	].filter(Boolean).map(index => getCollection(getContainerName(containerData)) + '.' + index).join('\n\n');
 };
 
-const createShardKey = ({ modelData, containerData }) => {
+const createShardKey = ({ containerData }) => {
 	const shardKey = containerData[0]?.shardKey?.[0]?.name;
 
 	if (!shardKey) {
 		return '';
 	}
 
-	const dbId = getDbId(modelData);
+	const dbId = getDbId(containerData);
 	const name = getContainerName(containerData);
 
 	return `use admin;\ndb.runCommand({ shardCollection: "${dbId}.${name}", key: { "${shardKey}": "hashed" }});`
 };
 
-const getDbId = (modelData) => {
-	return modelData[0]?.dbId;
+const getDbId = (data) => {
+	return data[0]?.dbId;
 };
 
 const getScript = (data) => {
-	const name = getDbId(data.modelData);
+	const name = getDbId(data.containerData);
 	const useDb = name ? `use ${name};` : '';
 	const indexes = getIndexes(data.containerData);
 
@@ -135,7 +147,7 @@ const insertSample = ({ containerData, entityData, sample }) => {
 };
 
 const insertSamples = (data) => {
-	const name = getDbId(data.modelData);
+	const name = getDbId(data.containerData);
 	const useDb = name ? `use ${name};` : '';
 	const samples = data.entities.map(entityId => insertSample({
 		containerData: data.containerData,

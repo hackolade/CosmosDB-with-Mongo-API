@@ -153,12 +153,6 @@ making sure that you maintain a proper JSON format.
 				"propertyType": "text"
 			},
 			{
-				"propertyName": "Database ID",
-				"propertyKeyword": "dbId",
-				"propertyTooltip": "A database is a logical container of one or more collections",
-				"propertyType": "text"
-			},
-			{
 				"propertyName": "Preferred location",
 				"propertyKeyword": "preferredLocation",
 				"propertyTooltip": "Default experience",
