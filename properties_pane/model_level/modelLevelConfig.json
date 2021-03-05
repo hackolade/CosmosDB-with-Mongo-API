@@ -194,7 +194,8 @@ making sure that you maintain a proper JSON format.
 					"USGov Texas"
 				],
 				"disabledOption": false
-			},			{
+			},
+			{
 				"propertyName": "API Experience",
 				"propertyKeyword": "apiExperience",
 				"propertyTooltip": "Default experience",
@@ -207,6 +208,17 @@ making sure that you maintain a proper JSON format.
 					"Table API"
 				],
 				"disabledOption": true
+			},
+			{
+				"propertyName": "DB Version",
+				"propertyKeyword": "dbVersion",
+				"propertyTooltip": "Database version",
+				"propertyType": "select",
+				"options": [
+					"3.2.0",
+					"3.6.0",
+					"4.0.0"
+				]
 			},
 			{
 				"propertyName": "Locations",

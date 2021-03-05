@@ -12,6 +12,9 @@
 			"applicationTarget": "COSMOSDB-MONGO",
 			"title": "Cosmos DB w/ Mongo API",
 			"versions": [
+				"3.2.0",
+				"3.6.0",
+				"4.0.0"
 			]
 		},
 		"features": {

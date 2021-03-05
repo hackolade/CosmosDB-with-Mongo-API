@@ -191,7 +191,7 @@ module.exports = {
 
 				let modelInfo = {
 					accountID: data.password,
-					version: []
+					version: '4.0.0'
 				};
 
 				await Promise.all([
@@ -211,6 +211,7 @@ module.exports = {
 					modelInfo = {
 						...modelInfo,
 						...controlPaneData,
+						apiExperience: 'Mongo API',
 						version: buildInfo.version,
 					}
 				});
