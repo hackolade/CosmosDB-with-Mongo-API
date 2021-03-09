@@ -1,5 +1,5 @@
 {
-	"extension": "json",
+	"extension": "js",
 	"filterName": "MongoDB script",
 	"namePrefix": "CosmosDB Mongo API",
 	"hasUpdateScript": false,

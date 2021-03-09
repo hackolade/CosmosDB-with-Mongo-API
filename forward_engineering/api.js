@@ -7,13 +7,14 @@ module.exports = {
 			const _ = app.require('lodash');
 			const insertSamplesOption = _.get(data, 'options.additionalOptions', []).find(option => option.id === 'INCLUDE_SAMPLES') || {};
 			const withSamples = data.options.origin !== 'ui';
-			const script = scriptHelper.getScript(data);
+			let script = scriptHelper.getScript(data);
+			const samples = scriptHelper.insertSamples(data);
+			script += withSamples ? '\n' + samples : '';
 
 			if (withSamples || !insertSamplesOption.value) {
 				return callback(null, script);
 			}
 
-			const samples = scriptHelper.insertSamples(data);
 
 			return callback(null, [
 				{ title: 'MongoDB script', script },
