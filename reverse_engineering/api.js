@@ -3,6 +3,7 @@
 const async = require('async');
 const _ = require('lodash');
 const CosmosClient = require('./CosmosClient');
+const bson = require('bson');
 const connectionHelper = require('./helpers/connectionHelper');
 
 const ERROR_CONNECTION = 1;
@@ -220,7 +221,7 @@ module.exports = {
 					const collection = db.collection(bucketName);
 					logger.progress({ message: 'Collection data loading ...', containerName: data.database, entityName: bucketName });											
 
-					getBucketInfo(db, cosmosClient, bucketName, (err) => {
+					getBucketInfo(db, bucketName, (err) => {
 						logger.progress({ message: 'Error of getting collection data .\n ' + err.message, containerName: data.database, entityName: bucketName });											
 						logger.log('error', err);
 					}, (err, bucketInfo = {}) => {
@@ -273,12 +274,14 @@ module.exports = {
 
 											let documentsPackage = {
 												dbName: bucketName,
-												collectionName: docKindItem,
-												documents: newArrayDocuments || [],
+												collectionName: String(docKindItem),
+												documents: adjustDocuments(newArrayDocuments || []),
 												indexes: [],
 												bucketIndexes: [],
 												views: [],
-												validation: false,
+												validation: {
+													jsonSchema: getJsonSchema(newArrayDocuments[0]),
+												},
 												docType: documentKindName,
 												bucketInfo
 											};
@@ -295,11 +298,13 @@ module.exports = {
 									let documentsPackage = {
 										dbName: bucketName,
 										collectionName: bucketName,
-										documents: documents || [],
+										documents: adjustDocuments(documents || []),
 										indexes: [],
 										bucketIndexes: [],
 										views: [],
-										validation: false,
+										validation: {
+											jsonSchema: getJsonSchema(documents[0]),
+										},
 										docType: bucketName,
 										bucketInfo
 									};
@@ -333,6 +338,118 @@ module.exports = {
 		});
 	}
 };
+
+const getValue = (doc) => {
+	if (doc instanceof bson.BSONRegExp || doc instanceof RegExp) {
+		return doc.toString();
+	} else if (doc instanceof Date) {
+		return doc.toISOString();
+	} else if (doc instanceof bson.ObjectID) {
+		return `ObjectId("${doc.toString()}")`;
+	} else if (doc instanceof bson.MinKey) {
+		return '';
+	} else if (doc instanceof bson.MaxKey) {
+		return '';
+	} else if (doc instanceof bson.Code) {
+		return doc.code;
+	} else if (doc instanceof bson.Binary) {
+		return doc.buffer.toString('base64'); 
+	} else if (typeof doc === 'number' && doc > 2**32) {
+		return doc % 2**32;
+	}
+};
+
+function adjustDocuments(doc) {
+	if (Array.isArray(doc)) {
+		return doc.map(adjustDocuments);
+	} else if (getValue(doc)) {
+		return getValue(doc);
+	} else if (doc && typeof doc === 'object') {
+		return Object.keys(doc).reduce((result, key) => {
+			return {
+				...result,
+				[key]: adjustDocuments(doc[key]),
+			};
+		}, {});
+	} else {
+		return doc;
+	}
+}
+
+function getJsonSchema(doc) {
+	if (Array.isArray(doc)) {
+		const items = getJsonSchema(doc[0]);
+		if (items) {
+			return {
+				items,
+			};
+		}
+	} else if (doc instanceof bson.BSONRegExp || doc instanceof RegExp) {
+		return {
+			type: 'regex'
+		};
+	} else if (doc instanceof bson.ObjectID) {
+		return {
+			type: 'objectId'
+		}; 
+	} else if (doc instanceof bson.MinKey) {
+		return {
+			type: 'minKey'
+		}; 
+	} else if (doc instanceof bson.MaxKey) {
+		return {
+			type: 'maxKey'
+		}; 
+	} else if (doc instanceof bson.Code) {
+		return {
+			type: 'JavaScript'
+		};
+	} else if (doc instanceof bson.Long) {
+		return {
+			type: 'numeric',
+			mode: 'integer64'
+		};
+	} else if (typeof doc === "number" && doc > 2**32) {
+		return {
+			type: 'numeric',
+			mode: 'integer64'
+		};
+	} else if (doc instanceof bson.Decimal128) {
+		return {
+			type: 'numeric',
+			mode: 'decimal128'
+		};
+	} else if (doc instanceof bson.Binary) {
+		return {
+			type: 'binary'
+		}; 
+	} else if (doc instanceof Date) {
+		return {
+			type: 'date'
+		}; 
+	} else if (doc && typeof doc === 'object') {
+		const properties = Object.keys(doc).reduce((schema, key) => {
+			const data = getJsonSchema(doc[key]);
+	
+			if (!data) {
+				return schema;
+			}
+
+			return {
+				...schema,
+				[key]: data,
+			};
+		}, {});
+
+		if (Object.keys(properties).length === 0) {
+			return;
+		}
+
+		return {
+			properties,
+		};
+	}
+}
 
 function getBuildInfo(db) {
 	return new Promise((resolve, reject) => {
@@ -615,7 +732,19 @@ const getAllTypesIndexes = (db, collectionName, shardingKey) => new Promise((res
 		})[0];
 
 		const indexes = allIndexes.filter(index => {
-			return !index.unique && index.expireAfterSeconds === undefined;
+			if (index.unique) {
+				return false;
+			}
+
+			if (index.expireAfterSeconds !== undefined) {
+				return false;
+			}
+
+			if (Object.keys(index.key).some(key => key === 'DocumentDBDefaultIndex')) {
+				return false;
+			}
+
+			return true;
 		}).map(index => {
 			const getIndexType = (index) => {
 				const isCompound = Object.values(index.key).length > 1;
@@ -653,7 +782,7 @@ const getAllTypesIndexes = (db, collectionName, shardingKey) => new Promise((res
 	});
 });
 
-function getBucketInfo(dbInstance, cosmosClient, collectionName, logError, cb) {
+function getBucketInfo(dbInstance, collectionName, logError, cb) {
 	let bucketInfo = {};
 
 	getShardingKey(dbInstance, collectionName)
@@ -677,82 +806,6 @@ function getBucketInfo(dbInstance, cosmosClient, collectionName, logError, cb) {
 		cb(err, bucketInfo);
 	});
 
-}
-
-function getCollectionTTLInfo({ defaultTtl }) {
-	switch (defaultTtl) {
-		case undefined:
-			return {
-				TTL: 'Off'
-			}
-		case -1:
-			return { TTL: 'On (no default)' };
-		default:
-			return {
-				TTLseconds: defaultTtl,
-				TTL: 'On'
-			};
-	}
-}
-
-function getCollectionTriggers(triggers = []) {
-	return triggers.map(({ id, triggerType, triggerOperation, body }) => {
-		return {
-			triggerID: id,
-			prePostTrigger: triggerType === 'Pre' ? 'Pre-Trigger' : 'Post-Trigger',
-			triggerOperation,
-			triggerFunction: body
-		}
-	});
-}
-
-function getCollectionUDFS(udfs = []) {
-	return udfs.map(({ id, body }) => {
-		return {
-			udfID: id,
-			udfFunction: body
-		}
-	});
-}
-
-function getCollectionStoredProcedures(sprocs = []) {
-	return sprocs.map(({ id, body }) => {
-		return {
-			storedProcID: id,
-			storedProcFunction: body
-		}
-	});
-}
-
-function getCollectionIndexes(indexingPolicy) {
-	if (!indexingPolicy) {
-		return [];
-	}
-	const { automatic, indexingMode } = indexingPolicy;
-	const mapIndex = (index, includedPath, excludedPath) => {
-		return {
-			automatic: automatic ? 'true' : 'false',
-			mode: indexingMode ? _.capitalize(indexingMode) : 'None',
-			indexIncludedPath: includedPath,
-			kind: index.kind,
-			dataType: index.dataType,
-			indexPrecision: index.precision,
-			indexExcludedPath: excludedPath
-		}
-	}
-	let collectionIndexes = [];
-	
-	_.get(indexingPolicy, 'includedPaths', []).forEach(({ path, indexes = [] }) => {
-		const includedPathIndexes = indexes.map(index => mapIndex(index, path, ''));
-		collectionIndexes = collectionIndexes.concat(includedPathIndexes);
-	})
-
-	_.get(indexingPolicy, 'excludedPaths', []).forEach(({ path, indexes = [] }) => {
-		const excludedPathIndexes = indexes.map(index => mapIndex(index, '', path));
-		collectionIndexes = collectionIndexes.concat(excludedPathIndexes);
-	})
-
-	return collectionIndexes;
 }
 
 function convertTtlIndex(ttlIndex) {

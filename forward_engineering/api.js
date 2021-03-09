@@ -35,7 +35,7 @@ module.exports = {
 			const samples = scriptHelper.insertSample({
 				containerData: data.containerData,
 				entityData: data.entityData,
-				sample: JSON.parse(data.jsonData),
+				sample: data.jsonData,
 			});
 
 			return callback(null, [script, samples].join('\n\n'));

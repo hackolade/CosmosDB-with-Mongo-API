@@ -1,4 +1,5 @@
 const vm = require('vm');
+const bson = require('../../reverse_engineering/node_modules/bson');
 const connectionHelper = require('../../reverse_engineering/helpers/connectionHelper');
 
 const applyToInstanceHelper = {
@@ -12,7 +13,7 @@ const applyToInstanceHelper = {
 
 			connection = await connect(data, logger);
 
-			const mongodbScript = replaceUseCommand(data.script);
+			const mongodbScript = replaceUseCommand(convertBson(data.script));
 			await runMongoDbScript({
 				mongodbScript,
 				logger,
@@ -86,6 +87,13 @@ const runMongoDbScript = ({ mongodbScript, logger: loggerInstance, connection })
 	logger.info('Start applying instance ...');
 
 	const context = {
+		ISODate: (d) => new Date(d),
+		ObjectId: bson.ObjectId,
+		Binary: bson.Binary,
+		MinKey: bson.MinKey,
+		MaxKey: bson.MaxKey,
+		Code: bson.Code,
+
 		useDb(dbName) {
 			currentDb = dbName;
 		},
@@ -186,5 +194,10 @@ const createLogger = logger => ({
 		}
 	}
 });
+
+function convertBson(sample) {
+	return sample.replace(/\{\s*\"\$minKey\": (\d*)\s*\}/gi, 'MinKey($1)')
+		.replace(/\{\s*\"\$maxKey\": (\d*)\s*\}/gi, 'MaxKey($1)');
+}
 
 module.exports = applyToInstanceHelper;
