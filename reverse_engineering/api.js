@@ -354,17 +354,21 @@ const getValue = (doc) => {
 		return '';
 	} else if (doc instanceof bson.Code) {
 		return doc.code;
+	} else if (doc instanceof bson.Decimal128) {
+		return 1.0;
+	} else if (doc instanceof bson.Long) {
+		return 1;
 	} else if (doc instanceof bson.Binary) {
 		return doc.buffer.toString('base64'); 
-	} else if (typeof doc === 'number' && doc > 2**32) {
-		return doc % 2**32;
+	} else if (typeof doc === 'number' && Math.abs(doc) > 2**32) {
+		return Math.abs(doc) % 2**32;
 	}
 };
 
 function adjustDocuments(doc) {
 	if (Array.isArray(doc)) {
 		return doc.map(adjustDocuments);
-	} else if (getValue(doc)) {
+	} else if (getValue(doc) !== undefined) {
 		return getValue(doc);
 	} else if (doc && typeof doc === 'object') {
 		return Object.keys(doc).reduce((result, key) => {
@@ -411,7 +415,7 @@ function getJsonSchema(doc) {
 			type: 'numeric',
 			mode: 'integer64'
 		};
-	} else if (typeof doc === "number" && doc > 2**32) {
+	} else if (typeof doc === "number" && Math.abs(doc) > 2**32) {
 		return {
 			type: 'numeric',
 			mode: 'integer64'

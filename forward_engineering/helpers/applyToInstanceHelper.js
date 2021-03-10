@@ -104,7 +104,7 @@ const runMongoDbScript = ({ mongodbScript, logger: loggerInstance, connection })
 				const collection = db.collection(collectionName);
 
 				return {
-					createIndex(fields, params) {
+					createIndex(fields, params = {}) {
 						const indexName = params.unique ? 'unique' : (params.name || '');
 						const command = () => collection.createIndex(fields, params).then(() => {
 							logger.info(`index ${indexName} created`);
