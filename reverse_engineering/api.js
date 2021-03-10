@@ -1,7 +1,5 @@
 'use strict';
 
-const async = require('async');
-const _ = require('lodash');
 const CosmosClient = require('./CosmosClient');
 const bson = require('bson');
 const connectionHelper = require('./helpers/connectionHelper');
@@ -65,7 +63,8 @@ module.exports = {
 		});
 	},
 
-	getDocumentKinds: function(connectionInfo, logger, cb) {		
+	getDocumentKinds: function(connectionInfo, logger, cb, app) {
+		const async = app.require('async');	
 		this.connect(connectionInfo, logger, (err, connection) => {
 			if (err) {
 				logger.log('error', err);
@@ -123,7 +122,9 @@ module.exports = {
 		});
 	},
 
-	getDbCollectionsNames: function(connectionInfo, logger, cb) {
+	getDbCollectionsNames: function(connectionInfo, logger, cb, app) {
+		const _ = app.require('lodash');
+		const async = app.require('async');
 		this.connect(connectionInfo, logger, (err, connection) => {
 			if (err) {
 				logger.log('error', err);
@@ -146,7 +147,7 @@ module.exports = {
 					} else {
 						let collectionNames = (connectionInfo.includeSystemCollection ? collections : filterSystemCollections(collections)).map(item => item.name);
 						logger.log('info', collectionNames, "Collection list for current database", connectionInfo.hiddenKeys);
-						handleBucket(connectionInfo, collectionNames, db, function (err, items) {
+						handleBucket(_, async, connectionInfo, collectionNames, db, function (err, items) {
 							connection.close();
 							if (err) {
 								cb(err);
@@ -160,7 +161,8 @@ module.exports = {
 		});
 	},
 
-	getDbCollectionsData: function(data, logger, cb){
+	getDbCollectionsData: function(data, logger, cb, app){
+		const async = app.require('async');	
 		let includeEmptyCollection = data.includeEmptyCollection;
 		let { recordSamplingSettings, fieldInference } = data;
 		logger.progress = logger.progress || (() => {});
@@ -472,7 +474,7 @@ function getSamplingInfo(recordSamplingSettings, fieldInference){
 	return samplingInfo;
 }
 
-function handleBucket(connectionInfo, collectionNames, database, dbItemCallback){
+function handleBucket(_, async, connectionInfo, collectionNames, database, dbItemCallback){
 	async.map(collectionNames, (collectionName, collItemCallback) => {
 		const collection = database.collection(collectionName);
 		if (!collection) {
@@ -495,7 +497,7 @@ function handleBucket(connectionInfo, collectionNames, database, dbItemCallback)
 					documentTypes = _.uniq(documentTypes);
 				}
 
-				let dataItem = prepareConnectionDataItem(documentTypes, collectionName, database, documents.length === 0);
+				let dataItem = prepareConnectionDataItem(_, documentTypes, collectionName, database, documents.length === 0);
 				return collItemCallback(err, dataItem);
 			}
 		});
@@ -504,7 +506,7 @@ function handleBucket(connectionInfo, collectionNames, database, dbItemCallback)
 	});
 }
 
-function prepareConnectionDataItem(documentTypes, bucketName, database, isEmpty){
+function prepareConnectionDataItem(_, documentTypes, bucketName, database, isEmpty){
 	let uniqueDocuments = _.uniq(documentTypes);
 	let connectionDataItem = {
 		dbName: bucketName,
