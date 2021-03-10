@@ -31,7 +31,6 @@ module.exports = {
 	},
 	generateScript(data, logger, callback, app) {
 		try {
-			const _ = app.require('lodash');
 			const script = scriptHelper.getScript(data);
 			const samples = scriptHelper.insertSample({
 				containerData: data.containerData,
