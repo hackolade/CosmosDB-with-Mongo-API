@@ -4,8 +4,6 @@
   "description": "",
   "author": "Hackolade",
   "dependencies": {
-    "async": "^2.5.0",
-    "axios": "^0.21.1",
     "mongodb": "^3.6.1",
     "qs": "^6.9.6",
     "bson": "1.1.5"
