@@ -198,11 +198,27 @@ making sure that you maintain a proper JSON format.
 				"valueType": "number"
 			},
 			{
+				"propertyName": "Database ID",
+				"propertyKeyword": "dbId",
+				"shouldValidate": true,
+				"propertyTooltip": "A database is a logical container of one or more containers",
+				"propertyType": "text",
+				"validation": {
+					"required": true
+				}
+			},
+			{
 				"propertyName": "Shard key",
 				"propertyKeyword": "shardKey",
 				"propertyTooltip": "The Partition Key is a string only used to automatically partition data among multiple servers for scalability.  Choose a JSON property name that has a wide range of values and is likely to have evenly distributed access patterns.",
-				"propertyType": "text",
-				"valueType": "string"
+				"propertyType": "fieldList",
+				"template": "orderedList",
+				"templateOptions": {
+					"divider": ".",
+					"front": false,
+					"entityName": false,
+					"maxField": 1
+				}
 			},
 			{
 				"propertyName": "Unique keys",
@@ -211,29 +227,14 @@ making sure that you maintain a proper JSON format.
 				"structure": [{
 					"propertyName": "Attribute path",
 					"propertyKeyword": "attributePath",
-					"propertyTooltip": "Comma separated paths",
-					"propertyType": "text"
-				}]
-			},
-			{
-				"propertyName": "TTL index",
-				"propertyKeyword": "ttlIndex",
-				"propertyType": "block",
-				"structure": [{
-					"propertyName": "Name",
-					"propertyKeyword": "name",
-					"propertyTooltip": "",
-					"propertyType": "text"
-				}, {
-					"propertyName": "Key",
-					"propertyKeyword": "key",
-					"propertyTooltip": "",
-					"propertyType": "text"
-				}, {
-					"propertyName": "Expire after seconds",
-					"propertyKeyword": "expireAfterSeconds",
-					"propertyTooltip": "",
-					"propertyType": "numeric"
+					"propertyType": "fieldList",
+					"template": "orderedList",
+					"templateOptions": {
+						"divider": ".",
+						"front": false,
+						"entityName": false,
+						"topLevel": true
+					}
 				}]
 			},
 			{
@@ -267,233 +268,112 @@ making sure that you maintain a proper JSON format.
 					"template": "textarea"
 				},
 				{
-					"propertyName": "Automatic",
-					"propertyKeyword": "automatic",
-					"propertyTooltip": "Automatic indexing: true or false",
+					"propertyName": "Type",
+					"propertyKeyword": "indexType",
+					"propertyTooltip": "Index type",
 					"propertyType": "select",
+					"defaultValue": "Single Field",
 					"options": [
-						"true",
-						"false"
+						"Single Field",
+						"Wildcard",
+						"Compound"
 					]
 				},
 				{
-					"propertyName": "Mode",
-					"propertyKeyword": "mode",
-					"propertyTooltip": "Indexing mode: consistent, lazy, or none",
-					"propertyType": "select",
-					"options": [
-						"Consistent",
-						"Lazy",
-						"None"
-					]
+					"propertyName": "Key",
+					"propertyKeyword": "indexKey",
+					"shouldValidate": false,
+					"propertyTooltip": "Index key property",
+					"propertyType": "fieldList",
+					"template": "orderedList",
+					"types": [
+						"ascending",
+						"descending",
+						"2dsphere"
+					],
+					"templateOptions": {
+						"divider": ".",
+						"front": false,
+						"root": false,
+						"entityName": false,
+						"maxField": 1,
+						"ending": {
+							"array": "[]",
+							"default": ""
+						},
+						"addType": false
+					},
+					"dependency": {
+						"type": "or",
+						"values": [
+							{
+								"key": "indexType",
+								"value": "Single Field"
+							},
+							{
+								"key": "indexType",
+								"exist": false
+							}
+						]
+					}
 				},
 				{
-					"propertyName": "Included path",
-					"propertyKeyword": "indexIncludedPath",
-					"propertyTooltip": "Included path index expression",
-					"propertyType": "details",
-					"template": "textarea",
-					"markdown": false
+					"propertyName": "Key",
+					"propertyKeyword": "indexKey",
+					"shouldValidate": false,
+					"propertyTooltip": "Index key property",
+					"propertyType": "fieldList",
+					"template": "orderedList",
+					"types": [
+						"ascending",
+						"descending"
+					],
+					"templateOptions": {
+						"divider": ".",
+						"front": false,
+						"root": true,
+						"rootTemplate": "$**",
+						"entityName": false,
+						"maxField": 1,
+						"ending": {
+							"document": "$**",
+							"array": "$**",
+							"default": ""
+						},
+						"addType": false
+					},
+					"dependency": {
+						"key": "indexType",
+						"value": "Wildcard"
+					}
 				},
 				{
-					"propertyName": "Kind",
-					"propertyKeyword": "kind",
-					"propertyTooltip": "Index kind: Hash (equality queries), Range (equality, range or Order By queries), or Spatial (spatial queries)",
-					"propertyType": "select",
-					"options": [
-						"Hash",
-						"Range",
-						"Spatial"
-					]
-				},
-				{
-					"propertyName": "Data type",
-					"propertyKeyword": "dataType",
-					"propertyTooltip": "Data type: String, Number, Point, Polygon, or LineString (can contain only one entry per data type per path)",
-					"propertyType": "select",
-					"options": [
-						"String",
-						"Number",
-						"Point",
-						"Polygon",
-						"LineString"
-					]
-				},
-				{
-					"propertyName": "Precision",
-					"propertyKeyword": "indexPrecision",
-					"propertyTooltip": "1-8 or -1 (Maximum precision) for numbers, 1-100 (Maximum precision) for string",
-					"propertyType": "text",
-					"valueType": "number"
-				},
-				{
-					"propertyName": "Excluded path",
-					"propertyKeyword": "indexExcludedPath",
-					"propertyTooltip": "Excluded path index expression",
-					"propertyType": "details",
-					"template": "textarea",
-					"markdown": false
+					"propertyName": "Key",
+					"propertyKeyword": "indexKey",
+					"shouldValidate": false,
+					"propertyTooltip": "Index key property",
+					"propertyType": "fieldList",
+					"template": "orderedList",
+					"types": [
+						"ascending",
+						"descending"
+					],
+					"templateOptions": {
+						"divider": ".",
+						"front": false,
+						"root": false,
+						"entityName": false,
+						"topLevel": true,
+						"addType": false
+					},
+					"dependency": {
+						"key": "indexType",
+						"value": "Compound"
+					}
 				},
 				{
 					"propertyName": "Comments",
 					"propertyKeyword": "indexComments",
-					"propertyTooltip": "comments",
-					"propertyType": "details",
-					"template": "textarea"
-				}
-			]
-		}]
-	},
-	{
-		"lowerTab": "Stored Procs",
-		"structure": [{
-			"propertyName": "Stored Procs",
-			"propertyType": "group",
-			"propertyKeyword": "storedProcs",
-			"propertyTooltip": "",
-			"structure": [
-				{
-					"propertyName": "Name",
-					"propertyKeyword": "name",
-					"propertyTooltip": "",
-					"propertyType": "text"
-				},
-				{
-					"propertyName": "Id",
-					"propertyKeyword": "storedProcID",
-					"propertyTooltip": "Stored procedure unique name",
-					"propertyType": "text"
-				},
-				{
-					"propertyName": "Description",
-					"propertyKeyword": "storedProcDescription",
-					"propertyTooltip": "description",
-					"propertyType": "details",
-					"template": "textarea"
-				},
-				{
-					"propertyName": "Function",
-					"propertyKeyword": "storedProcFunction",
-					"propertyTooltip": "Stored procedure function",
-					"propertyType": "details",
-					"template": "textarea",
-					"markdown": false
-				},
-				{
-					"propertyName": "Comments",
-					"propertyKeyword": "storedProcComments",
-					"propertyTooltip": "comments",
-					"propertyType": "details",
-					"template": "textarea"
-				}
-			]
-		}]
-	},
-	{
-		"lowerTab": "Triggers",
-		"structure": [{
-			"propertyName": "Triggers",
-			"propertyType": "group",
-			"propertyKeyword": "triggers",
-			"propertyTooltip": "",
-			"structure": [
-				{
-					"propertyName": "Name",
-					"propertyKeyword": "name",
-					"propertyTooltip": "",
-					"propertyType": "text"
-				},
-				{
-					"propertyName": "Id",
-					"propertyKeyword": "triggerID",
-					"propertyTooltip": "Stored procedure unique name",
-					"propertyType": "text"
-				},
-				{
-					"propertyName": "Description",
-					"propertyKeyword": "triggerDescription",
-					"propertyTooltip": "description",
-					"propertyType": "details",
-					"template": "textarea"
-				},
-				{
-					"propertyName": "Pre/Post",
-					"propertyKeyword": "prePostTrigger",
-					"propertyTooltip": "Choose whether pre- or post-trigger",
-					"propertyType": "select",
-					"options": [
-						"Pre-Trigger",
-						"Post-Trigger"
-					]
-				},
-				{
-					"propertyName": "Operation",
-					"propertyKeyword": "triggerOperation",
-					"propertyTooltip": "Choose operation",
-					"propertyType": "select",
-					"options": [
-						"All",
-						"Create",
-						"Delete",
-						"Replace"
-					]
-				},
-				{
-					"propertyName": "Function",
-					"propertyKeyword": "triggerFunction",
-					"propertyTooltip": "Trigger function",
-					"propertyType": "details",
-					"template": "textarea",
-					"markdown": false
-				},
-				{
-					"propertyName": "Comments",
-					"propertyKeyword": "triggerComments",
-					"propertyTooltip": "comments",
-					"propertyType": "details",
-					"template": "textarea"
-				}
-			]
-		}]
-	},
-	{
-		"lowerTab": "UDFs",
-		"structure": [{
-			"propertyName": "UDFs",
-			"propertyType": "group",
-			"propertyKeyword": "udfs",
-			"propertyTooltip": "",
-			"structure": [
-				{
-					"propertyName": "Name",
-					"propertyKeyword": "name",
-					"propertyTooltip": "",
-					"propertyType": "text"
-				},
-				{
-					"propertyName": "Id",
-					"propertyKeyword": "udfID",
-					"propertyTooltip": "Stored procedure unique name",
-					"propertyType": "text"
-				},
-				{
-					"propertyName": "Description",
-					"propertyKeyword": "udfDescription",
-					"propertyTooltip": "description",
-					"propertyType": "details",
-					"template": "textarea"
-				},
-				{
-					"propertyName": "Function",
-					"propertyKeyword": "udfFunction",
-					"propertyTooltip": "UDF function",
-					"propertyType": "details",
-					"template": "textarea",
-					"markdown": false
-				},
-				{
-					"propertyName": "Comments",
-					"propertyKeyword": "udfComments",
 					"propertyTooltip": "comments",
 					"propertyType": "details",
 					"template": "textarea"

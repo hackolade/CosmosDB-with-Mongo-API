@@ -153,12 +153,6 @@ making sure that you maintain a proper JSON format.
 				"propertyType": "text"
 			},
 			{
-				"propertyName": "Database ID",
-				"propertyKeyword": "dbId",
-				"propertyTooltip": "A database is a logical container of one or more collections",
-				"propertyType": "text"
-			},
-			{
 				"propertyName": "Preferred location",
 				"propertyKeyword": "preferredLocation",
 				"propertyTooltip": "Default experience",
@@ -200,7 +194,8 @@ making sure that you maintain a proper JSON format.
 					"USGov Texas"
 				],
 				"disabledOption": false
-			},			{
+			},
+			{
 				"propertyName": "API Experience",
 				"propertyKeyword": "apiExperience",
 				"propertyTooltip": "Default experience",
@@ -215,6 +210,56 @@ making sure that you maintain a proper JSON format.
 				"disabledOption": true
 			},
 			{
+				"propertyName": "DB Version",
+				"propertyKeyword": "dbVersion",
+				"propertyTooltip": "Database version",
+				"propertyType": "select",
+				"options": [
+					"3.2.0",
+					"3.6.0",
+					"4.0.0"
+				]
+			},
+			{
+				"propertyName": "Locations",
+				"propertyKeyword": "locations",
+				"propertyTooltip": "List of locations enabled for the Cosmos DB account",
+				"propertyType": "group",
+				"structure": [
+					{
+						"propertyName": "Id",
+						"propertyKeyword": "locationId",
+						"propertyTooltip": "The unique identifier of the region within the database account",
+						"propertyType": "text"
+					},
+					{
+						"propertyName": "Name",
+						"propertyKeyword": "locationName",
+						"propertyTooltip": "The name of the region",
+						"propertyType": "text"
+					},
+					{
+						"propertyName": "Failover priority",
+						"propertyKeyword": "failoverPriority",
+						"propertyTooltip": "The failover priority of the region",
+						"propertyType": "numeric",
+						"valueType": "number"
+					},
+					{
+						"propertyName": "Zone redundant",
+						"propertyKeyword": "isZoneRedundant",
+						"propertyTooltip": "Flag to indicate whether or not this region is an AvailabilityZone region",
+						"propertyType": "checkbox"
+					}
+				]
+			},
+			{
+				"propertyName": "Enable multiple write locations",
+				"propertyKeyword": "enableMultipleWriteLocations",
+				"propertyTooltip": "Enables the account to write in multiple locations",
+				"propertyType": "checkbox"
+			},
+			{
 				"propertyName": "Default consistency policy",
 				"propertyKeyword": "defaultConsistency",
 				"propertyTooltip": "Default consistency policy level",
@@ -227,6 +272,66 @@ making sure that you maintain a proper JSON format.
 					"Eventual"
 				],
 				"disabledOption": false
+			},
+			{
+				"propertyName": "Enable automatic failover",
+				"propertyKeyword": "enableAutomaticFailover",
+				"propertyTooltip": "Enables automatic failover of the write region in the rare event that the region is unavailable due to an outage",
+				"propertyType": "checkbox"
+			},
+			{
+				"propertyName": "Virtual network filter enabled",
+				"propertyKeyword": "isVirtualNetworkFilterEnabled",
+				"propertyTooltip": "Flag to indicate whether to enable/disable Virtual Network ACL rules",
+				"propertyType": "checkbox"
+			},
+			{
+				"propertyName": "Virtual network rules",
+				"propertyKeyword": "virtualNetworkRules",
+				"propertyTooltip": "List of Virtual Network ACL rules configured for the Cosmos DB account",
+				"propertyType": "group",
+				"structure": [
+					{
+						"propertyName": "Id",
+						"propertyKeyword": "virtualNetworkId",
+						"propertyTooltip": "Resource ID of a subnet",
+						"propertyType": "text"
+					},
+					{
+						"propertyName": "Ignore missing VNet endpoint",
+						"propertyKeyword": "ignoreMissingVNetServiceEndpoint",
+						"propertyTooltip": "Create firewall rule before the virtual network has vnet service endpoint enabled",
+						"propertyType": "checkbox"
+					}
+				]
+			},
+			{
+				"propertyName": "IP-Range filter",
+				"propertyKeyword": "ipRangeFilter",
+				"propertyTooltip": "This value specifies the set of IP addresses or IP address ranges in CIDR form to be included as the allowed list of client IPs for a given database account",
+				"propertyType": "details",
+				"template": "textarea",
+				"markdown": false
+			},
+			{
+				"propertyName": "Tags",
+				"propertyKeyword": "tags",
+				"propertyTooltip": "A list of key-value pairs that describe the resource",
+				"propertyType": "group",
+				"structure": [
+					{
+						"propertyName": "Name",
+						"propertyKeyword": "tagName",
+						"propertyTooltip": "Tag name",
+						"propertyType": "text"
+					},
+					{
+						"propertyName": "Value",
+						"propertyKeyword": "tagValue",
+						"propertyTooltip": "Tag value",
+						"propertyType": "text"
+					}
+				]
 			},
 			{
 				"propertyName": "Comments",

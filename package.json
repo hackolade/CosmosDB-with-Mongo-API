@@ -4,14 +4,17 @@
 	"versionDate": "2021-02-13",
 	"author": "hackolade",
 	"engines": {
-		"hackolade": "1.10.x",
-		"hackoladePlugin": "1.0.0"
+		"hackolade": "4.3.11",
+		"hackoladePlugin": "1.0.1"
 	},
 	"contributes": {
 		"target": {
 			"applicationTarget": "COSMOSDB-MONGO",
 			"title": "Cosmos DB w/ Mongo API",
 			"versions": [
+				"3.2.0",
+				"3.6.0",
+				"4.0.0"
 			]
 		},
 		"features": {
@@ -46,6 +49,7 @@
 				}
 			},
 			"enableReverseEngineering": true,
+			"enableForwardEngineering": true,
 			"enableReverseEngineeringDetectionSchemaByContent": true,
 			"enableReversingDateTypeAsISODate": true
 		}
