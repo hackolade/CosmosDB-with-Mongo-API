@@ -205,7 +205,7 @@ module.exports = {
 					data.includeAccountInformation
 						? cosmosClient.getAdditionalAccountInfo(data).catch(err => {
 							logger.progress({ message: 'Error while getting control pane data: ' + err.message, containerName: data.database, entityName: '' });
-							logger.log('error', err);
+							logger.log('error', err, 'Error while getting control pane data');
 
 							return {};
 						})
