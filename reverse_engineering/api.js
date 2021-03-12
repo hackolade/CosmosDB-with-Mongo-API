@@ -20,8 +20,11 @@ module.exports = {
 		connectionHelper.connect(connectionInfo)
 			.then(connection => cb(null, connection))
 			.catch(err => {
-				logger.log('error', [params, err], "Connection error");
-				return cb(createError(ERROR_CONNECTION, err));
+				logger.log('error', createError(ERROR_CONNECTION, err), "Connection error");
+				return cb({
+					message: err.code === 18 ? 'Authentication failed. Please, check connection settings and try again' : err.message,
+					stack: err.stack,
+				});
 			});
 	},
 
@@ -32,7 +35,7 @@ module.exports = {
 	testConnection: function(connectionInfo, logger, cb){
 		this.connect(connectionInfo, logger, (err, result) => {
 			if (err) {
-				cb(true);
+				cb(err);
 			} else {
 				cb(false);
 				result.close();
