@@ -1,10 +1,10 @@
 {
 	"name": "CosmosDB-with-Mongo-API",
-	"version": "0.1.21",
-	"versionDate": "2021-02-13",
+	"version": "0.1.22",
+	"versionDate": "2021-03-12",
 	"author": "hackolade",
 	"engines": {
-		"hackolade": "4.3.11",
+		"hackolade": "4.3.12",
 		"hackoladePlugin": "1.0.1"
 	},
 	"contributes": {
