@@ -141,6 +141,10 @@ class CosmosClient {
 		}
 
 		return {
+			tenant: tenantId,
+			resGrp: resourceGroupName,
+			subscription: subscriptionId,
+			preferredLocation: accountData.location,
 			enableMultipleWriteLocations: accountData.properties.enableMultipleWriteLocations,
 			enableAutomaticFailover: accountData.properties.enableAutomaticFailover,
 			isVirtualNetworkFilterEnabled: accountData.properties.isVirtualNetworkFilterEnabled,
