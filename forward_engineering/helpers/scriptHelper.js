@@ -95,7 +95,7 @@ const getIndexes = (containerData) => {
 
 	return [
 		...uniqueIndexes.map(uniqueKey => createUniqueIndex(uniqueKey.attributePath, shardKey)),
-		...indexes.map(createIndex),
+		...indexes.filter(index => index.isActivated !== false).map(createIndex),
 		createTtlIndex(containerData[0]),
 	].filter(Boolean).map(index => getCollection(getContainerName(containerData)) + '.' + index).join('\n\n');
 };
