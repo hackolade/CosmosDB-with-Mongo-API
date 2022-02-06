@@ -9,5 +9,6 @@
 		"WRONG_CONNECTION": "Can not connect to the Cosmos DB instance"
 	},
 	"excludeDocKind": ["id"],
-	"scenario": "getDatabases"
+	"scenario": "getDatabases",
+	"helpUrl": "https://hackolade.com/help/Azureinstance1.html"
 }
