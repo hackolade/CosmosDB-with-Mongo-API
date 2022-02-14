@@ -4,10 +4,10 @@
   "description": "",
   "author": "Hackolade",
   "dependencies": {
+    "axios": "^0.26.0",
+    "bson": "1.1.5",
     "mongodb": "^3.6.1",
-    "axios": "^0.21.1",
-    "qs": "^6.9.6",
-    "bson": "1.1.5"
+    "qs": "^6.9.6"
   },
   "installed": true
 }
