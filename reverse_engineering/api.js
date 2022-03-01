@@ -287,6 +287,7 @@ module.exports = {
 												validation: {
 													jsonSchema: getJsonSchema(newArrayDocuments[0]),
 												},
+												id: '_id',
 												docType: documentKindName,
 												bucketInfo
 											};
@@ -618,14 +619,7 @@ function getDocumentKindDataFromInfer(data, probability){
 }
 
 function filterDocuments(documents){
-	return documents.map(item =>{
-		for(let prop in item) {
-			if(prop && prop[0] === '_') {
-				delete item[prop];
-			}
-		}
-		return item;
-	});
+	return documents;
 }
 
 function filterSystemCollections(collections) {
