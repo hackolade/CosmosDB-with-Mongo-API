@@ -3,6 +3,7 @@
 	"erdAbbreviation": "<ts>",
 	"dtdAbbreviation": "{ts}",
 	"useSample": true,
+	"sample": "$__tmstmp_1460127718,1",
 	"isNotSelectable": true,
 	"defaultValues": {
 		"primaryKey": false,
