@@ -14,7 +14,8 @@ const applyToInstanceHelper = {
 
 			connection = await connect(data, logger);
 
-			const {scriptWithSamples, numberOfSamples} = await generateScriptForInsertingDataInBulk(data.script, data.entitiesData, log);
+			const collectionName = data.containerData?.[0]?.code || data.containerData?.[0]?.name;
+			const {scriptWithSamples, numberOfSamples} = await generateScriptForInsertingDataInBulk(data.script, collectionName, data.entitiesData, logger);
 			const mongodbScript = replaceUseCommand(convertBson(scriptWithSamples));
 			await runMongoDbScript({
 				mongodbScript,
@@ -176,7 +177,7 @@ const runMongoDbScript = ({ mongodbScript, logger: loggerInstance, connection, n
 	}, Promise.resolve());
 };
 
-const generateScriptForInsertingDataInBulk = async (script, entitiesData, logger) => {
+const generateScriptForInsertingDataInBulk = async (script, collectionName, entitiesData, logger) => {
 	let numberOfSamples = Object.keys(entitiesData).length;
 	const scriptWithSamples = await Object.values(entitiesData).reduce(async (resultScript, entityData) => {
 		resultScript = await resultScript;
@@ -186,15 +187,14 @@ const generateScriptForInsertingDataInBulk = async (script, entitiesData, logger
 		}
 
 		try {
-			const collectionName = entityData.code || entityData.name;
 			const documents = await readNdJsonByLine(entityData.filePath, logger);
 			numberOfSamples += documents.length;
 
 			return resultScript + documents
-				.map(document => `db.getCollection("${collectionName}").insertOne(${document});`)
+				.map(document => `db.getCollection("${collectionName}").insert(${document});`)
 				.join('\n\n');
 		} catch (error) {
-			logger.error(error, 'Error during publishing fake data in bulk');
+			logger.log('error', error, 'Error during publishing fake data in bulk');
 		}
 	}, Promise.resolve(script + '\n\n'));
 

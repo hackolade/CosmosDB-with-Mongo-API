@@ -50,13 +50,13 @@ const readNdJsonByLine = async (filePath, log) => {
                 line++;
 
                 if (shouldLogStep(line)) {
-                    log.info( `NDJSON_READ_LINES - lines: ${line} / ${maxDocuments}, progress: ${line / maxDocuments}`);
+                    log.log('info', { message: `NDJSON_READ_LINES - lines: ${line} / ${maxDocuments}, progress: ${line / maxDocuments}` });
                 }
                 if (data) {
                     documents.push(data);
                 }
             }).on('close', () => {
-                log.info(`NDJSON_READ_LINES - lines: ${line} / ${maxDocuments}, progress: ${line / maxDocuments}`);
+                log.log('info', { message: `NDJSON_READ_LINES - lines: ${line} / ${maxDocuments}, progress: ${line / maxDocuments}` });
                 return resolve(documents);
             })
         } catch (error) {
