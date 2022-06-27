@@ -1,6 +1,7 @@
 const vm = require('vm');
 const bson = require('../../reverse_engineering/node_modules/bson');
 const connectionHelper = require('../../reverse_engineering/helpers/connectionHelper');
+const readNdJsonByLine = require("./ndJsonHelper");
 
 const applyToInstanceHelper = {
 	async applyToInstance(data, logger, cb) {
@@ -13,11 +14,14 @@ const applyToInstanceHelper = {
 
 			connection = await connect(data, logger);
 
-			const mongodbScript = replaceUseCommand(convertBson(data.script));
+			const collectionName = data.containerData?.[0]?.code || data.containerData?.[0]?.name;
+			const {scriptWithSamples, numberOfSamples} = await generateScriptForInsertingDataInBulk(data.script, collectionName, data.entitiesData, logger);
+			const mongodbScript = replaceUseCommand(convertBson(scriptWithSamples));
 			await runMongoDbScript({
 				mongodbScript,
 				logger,
-				connection
+				connection,
+				numberOfSamples,
 			});
 
 			connection.close();
@@ -79,9 +83,11 @@ const replaceUseCommand = (script) => {
 	}).join('\n');
 };
 
-const runMongoDbScript = ({ mongodbScript, logger: loggerInstance, connection }) => {
+const runMongoDbScript = ({ mongodbScript, logger: loggerInstance, connection, numberOfSamples }) => {
 	let currentDb;
 	let commands = [];
+	let insertedSamples = 0;
+	let prevInsertingProgress = 0;
 	const logger = createLogger(loggerInstance);
 
 	logger.info('Start applying instance ...');
@@ -120,9 +126,16 @@ const runMongoDbScript = ({ mongodbScript, logger: loggerInstance, connection })
 					},
 					insert(data) {
 						const command = () => collection.insertOne(data).then(() => {
-							logger.info(`sample inserted`);
+							insertedSamples++;
+							const insertingProgress = Math.round((insertedSamples / numberOfSamples) * 100);
+							if (insertingProgress - prevInsertingProgress < 5) {
+								return;
+							}
+							prevInsertingProgress = insertingProgress;
+
+							logger.info(`Inserting Samples: ${insertingProgress}%`);
 						}).catch(error => {
-							const errMessage = `sample is not inserted: ${error.message}`;
+							const errMessage = `sample is not inserted ${insertedSamples} / ${numberOfSamples} Reason: ${error.message}`;
 							logger.error(error, errMessage);
 							error.message = errMessage;
 
@@ -162,6 +175,30 @@ const runMongoDbScript = ({ mongodbScript, logger: loggerInstance, connection })
 	return commands.reduce((prev, next) => {
 		return prev.then(() => next());
 	}, Promise.resolve());
+};
+
+const generateScriptForInsertingDataInBulk = async (script, collectionName, entitiesData, logger) => {
+	let numberOfSamples = Object.keys(entitiesData).length;
+	const scriptWithSamples = await Object.values(entitiesData).reduce(async (resultScript, entityData) => {
+		resultScript = await resultScript;
+
+		if (!entityData.filePath) {
+			return Promise.resolve(resultScript);
+		}
+
+		try {
+			const documents = await readNdJsonByLine(entityData.filePath, logger);
+			numberOfSamples += documents.length;
+
+			return resultScript + documents
+				.map(document => `db.getCollection("${collectionName}").insert(${document});`)
+				.join('\n\n');
+		} catch (error) {
+			logger.log('error', error, 'Error during publishing fake data in bulk');
+		}
+	}, Promise.resolve(script + '\n\n'));
+
+	return { scriptWithSamples, numberOfSamples };
 };
 
 const createLogger = logger => ({
