@@ -16,10 +16,7 @@
 		"id": "INCLUDE_SAMPLES",
 		"value": true,
 		"name": "Include sample data",
-		"align": "right",
-		"level": {
-			"entity": false
-		}
+		"align": "right"
 	}],
 	"splitView": {
 		"byAdditionalOptions": ["INCLUDE_SAMPLES"]
