@@ -16,46 +16,55 @@ class CosmosClient {
 	getUDFS(collectionId) {
 		const resourceType = 'udfs';
 
-		return this.callApi(this.getResource(collectionId, resourceType))
-			.then(({ UserDefinedFunctions }) => ({ type: resourceType, data: UserDefinedFunctions }));
+		return this.callApi(this.getResource(collectionId, resourceType)).then(({ UserDefinedFunctions }) => ({
+			type: resourceType,
+			data: UserDefinedFunctions,
+		}));
 	}
 
 	getTriggers(collectionId) {
 		const resourceType = 'triggers';
 
-		return this.callApi(this.getResource(collectionId, resourceType))
-			.then(({ Triggers }) => ({ type: resourceType, data: Triggers }));
+		return this.callApi(this.getResource(collectionId, resourceType)).then(({ Triggers }) => ({
+			type: resourceType,
+			data: Triggers,
+		}));
 	}
 
 	getStoredProcs(collectionId) {
 		const resourceType = 'sprocs';
 
-		return this.callApi(this.getResource(collectionId, resourceType))
-			.then(({ StoredProcedures }) => ({ type: resourceType, data: StoredProcedures }));
+		return this.callApi(this.getResource(collectionId, resourceType)).then(({ StoredProcedures }) => ({
+			type: resourceType,
+			data: StoredProcedures,
+		}));
 	}
 
 	getCollection(collectionId) {
 		const resourceType = 'colls';
 
-		return this.callApi(this.getResource(collectionId, resourceType))
-			.then(data => ({ type: resourceType, data }));
+		return this.callApi(this.getResource(collectionId, resourceType)).then(data => ({ type: resourceType, data }));
 	}
 
 	getCollectionWithExtra(collectionId, logger) {
 		const dataHandlers = [this.getCollection, this.getUDFS, this.getTriggers, this.getStoredProcs];
 		return Promise.all(
-			dataHandlers.map((handler) => handler.call(this, collectionId).catch(err => {
-				if (typeof logger === 'function') {
-					logger(err);
-				}
-			}))
-		).then(res => res.filter(Boolean).reduce((acc, { type, data }) => {
-			acc[type] = data;
-			return acc;
-		}, {}));
+			dataHandlers.map(handler =>
+				handler.call(this, collectionId).catch(err => {
+					if (typeof logger === 'function') {
+						logger(err);
+					}
+				}),
+			),
+		).then(res =>
+			res.filter(Boolean).reduce((acc, { type, data }) => {
+				acc[type] = data;
+				return acc;
+			}, {}),
+		);
 	}
 
-	callApi({ url, resourceType = '', resourceId = ''}, method = 'get') {
+	callApi({ url, resourceType = '', resourceId = '' }, method = 'get') {
 		const date = new Date().toUTCString();
 		return axios({
 			method,
@@ -64,10 +73,9 @@ class CosmosClient {
 				'x-ms-version': '2017-02-22',
 				'x-ms-date': date,
 				'Content-Type': 'application/json',
-				authorization: this.getAuthToken(method, resourceType, resourceId, date)
-			}
-		})
-		.then(({ data }) => data);
+				authorization: this.getAuthToken(method, resourceType, resourceId, date),
+			},
+		}).then(({ data }) => data);
 	}
 
 	getAuthToken(verb = '', resourceType = '', resourceId = '', date) {
@@ -98,19 +106,12 @@ class CosmosClient {
 		return {
 			url,
 			resourceId,
-			resourceType
+			resourceType,
 		};
 	}
 
 	async getAdditionalAccountInfo(connectionInfo) {
-		const {
-			clientId,
-			appSecret,
-			tenantId,
-			subscriptionId,
-			resourceGroupName,
-			host
-		} = connectionInfo;
+		const { clientId, appSecret, tenantId, subscriptionId, resourceGroupName, host } = connectionInfo;
 		const accNameRegex = /(https:\/\/)?(.+)\.documents.+/i;
 		const accountName = accNameRegex.test(host) ? accNameRegex.exec(host)[2] : '';
 		const tokenBaseURl = `https://login.microsoftonline.com/${tenantId}/oauth2/token`;
@@ -121,19 +122,19 @@ class CosmosClient {
 				grant_type: 'client_credentials',
 				client_id: clientId,
 				client_secret: appSecret,
-				resource: 'https://management.azure.com/'
+				resource: 'https://management.azure.com/',
 			}),
 			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			}
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
 		});
 		const dbAccountBaseUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/${accountName}?api-version=2015-04-08`;
 		let { data: accountData } = await axios({
 			method: 'get',
 			url: dbAccountBaseUrl,
 			headers: {
-				'Authorization': `${tokenData.token_type} ${tokenData.access_token}`
-			}
+				'Authorization': `${tokenData.token_type} ${tokenData.access_token}`,
+			},
 		});
 
 		if (Array.isArray(accountData.value)) {
@@ -148,20 +149,24 @@ class CosmosClient {
 			enableMultipleWriteLocations: accountData.properties.enableMultipleWriteLocations,
 			enableAutomaticFailover: accountData.properties.enableAutomaticFailover,
 			isVirtualNetworkFilterEnabled: accountData.properties.isVirtualNetworkFilterEnabled,
-			virtualNetworkRules: accountData.properties.virtualNetworkRules.map(({ id, ignoreMissingVNetServiceEndpoint }) => ({
-				virtualNetworkId: id,
-				ignoreMissingVNetServiceEndpoint
-			})),
+			virtualNetworkRules: accountData.properties.virtualNetworkRules.map(
+				({ id, ignoreMissingVNetServiceEndpoint }) => ({
+					virtualNetworkId: id,
+					ignoreMissingVNetServiceEndpoint,
+				}),
+			),
 			ipRangeFilter: accountData.properties.ipRangeFilter,
 			tags: Object.entries(accountData.tags).map(([tagName, tagValue]) => ({ tagName, tagValue })),
-			locations: accountData.properties.locations.map(({ id, locationName, failoverPriority, isZoneRedundant }) => ({
-				locationId: id,
-				locationName,
-				failoverPriority,
-				isZoneRedundant
-			}))
+			locations: accountData.properties.locations.map(
+				({ id, locationName, failoverPriority, isZoneRedundant }) => ({
+					locationId: id,
+					locationName,
+					failoverPriority,
+					isZoneRedundant,
+				}),
+			),
 		};
 	}
-};
+}
 
 module.exports = CosmosClient;

@@ -1,23 +1,32 @@
-
 const isObjectEmpty = obj => Object.keys(obj).length === 0;
 
 const filterObject = obj => Object.fromEntries(Object.entries(obj).filter(([key, value]) => value !== undefined));
 
 const createIndexStatement = (...args) => {
-	return 'createIndex(' + args.map(filterObject).filter(arg => !isObjectEmpty(arg)).map(stringify).join(', ') + ');';
+	return (
+		'createIndex(' +
+		args
+			.map(filterObject)
+			.filter(arg => !isObjectEmpty(arg))
+			.map(stringify)
+			.join(', ') +
+		');'
+	);
 };
 
-const stringify = (data) => JSON.stringify(data, null, 2);
+const stringify = data => JSON.stringify(data, null, 2);
 
-const getIndexType = (indexType) => {
-	return ({
-		'descending': -1,
-		'ascending': 1,
-		'2dsphere': '2dsphere',
-	})[indexType] || 1;
+const getIndexType = indexType => {
+	return (
+		{
+			'descending': -1,
+			'ascending': 1,
+			'2dsphere': '2dsphere',
+		}[indexType] || 1
+	);
 };
 
-const createIndex = (index) => {
+const createIndex = index => {
 	let indexKeys = index?.indexKey;
 
 	if (!Array.isArray(indexKeys)) {
@@ -31,13 +40,16 @@ const createIndex = (index) => {
 	}
 
 	return createIndexStatement(
-		indexKeys.reduce((result, indexKey) => ({
-			...result,
-			[indexKey.name]: getIndexType(indexKey.type),
-		}), {}),
+		indexKeys.reduce(
+			(result, indexKey) => ({
+				...result,
+				[indexKey.name]: getIndexType(indexKey.type),
+			}),
+			{},
+		),
 		{
 			name: index.name,
-		}
+		},
 	);
 };
 
@@ -46,14 +58,15 @@ const createTtlIndex = (containerData = {}) => {
 		return '';
 	}
 
-	return createIndexStatement({
-		_ts: 1,
-	}, filterObject({
-		name: 'ttl',
-		expireAfterSeconds: containerData.TTL === 'On (no default)'
-			? -1
-			: containerData.TTLseconds,
-	}));
+	return createIndexStatement(
+		{
+			_ts: 1,
+		},
+		filterObject({
+			name: 'ttl',
+			expireAfterSeconds: containerData.TTL === 'On (no default)' ? -1 : containerData.TTLseconds,
+		}),
+	);
 };
 
 const createUniqueIndex = (uniqueKeys, shardKey) => {
@@ -68,27 +81,32 @@ const createUniqueIndex = (uniqueKeys, shardKey) => {
 	}
 
 	return createIndexStatement(
-		uniqueKeys.reduce((result, indexKey) => ({
-			...result,
-			[indexKey.name]: 1,
-		}), shardKey ? {
-			[shardKey]: 1,
-		} : {}),
+		uniqueKeys.reduce(
+			(result, indexKey) => ({
+				...result,
+				[indexKey.name]: 1,
+			}),
+			shardKey
+				? {
+						[shardKey]: 1,
+					}
+				: {},
+		),
 		{
 			unique: true,
-		}
+		},
 	);
 };
 
-const getContainerName = (containerData) => {
+const getContainerName = containerData => {
 	return containerData[0]?.code || containerData[0]?.name;
 };
 
-const getCollection = (name) => {
+const getCollection = name => {
 	return `db.getCollection("${name}")`;
 };
 
-const getIndexes = (containerData) => {
+const getIndexes = containerData => {
 	const indexes = containerData[1]?.indexes || [];
 	const uniqueIndexes = containerData[0]?.uniqueKey || [];
 	const shardKey = containerData[0]?.shardKey?.[0]?.name;
@@ -97,7 +115,10 @@ const getIndexes = (containerData) => {
 		...uniqueIndexes.map(uniqueKey => createUniqueIndex(uniqueKey.attributePath, shardKey)),
 		...indexes.filter(index => index.isActivated !== false).map(createIndex),
 		createTtlIndex(containerData[0]),
-	].filter(Boolean).map(index => getCollection(getContainerName(containerData)) + '.' + index).join('\n\n');
+	]
+		.filter(Boolean)
+		.map(index => getCollection(getContainerName(containerData)) + '.' + index)
+		.join('\n\n');
 };
 
 const createShardKey = ({ containerData }) => {
@@ -110,14 +131,14 @@ const createShardKey = ({ containerData }) => {
 	const dbId = getDbId(containerData);
 	const name = getContainerName(containerData);
 
-	return `use admin;\ndb.runCommand({ shardCollection: "${dbId}.${name}", key: { "${shardKey}": "hashed" }});`
+	return `use admin;\ndb.runCommand({ shardCollection: "${dbId}.${name}", key: { "${shardKey}": "hashed" }});`;
 };
 
-const getDbId = (data) => {
+const getDbId = data => {
 	return data[0]?.dbId;
 };
 
-const getScript = (data) => {
+const getScript = data => {
 	const name = getDbId(data.containerData);
 	const useDb = name ? `use ${name};` : '';
 	const indexes = getIndexes(data.containerData);
@@ -125,7 +146,7 @@ const getScript = (data) => {
 	return [createShardKey(data), useDb, indexes].filter(Boolean).join('\n\n');
 };
 
-const updateSample = (sample, containerData, entityData) => {		
+const updateSample = (sample, containerData, entityData) => {
 	const docType = containerData?.docTypeName;
 
 	if (!docType) {
@@ -134,28 +155,40 @@ const updateSample = (sample, containerData, entityData) => {
 
 	let data = JSON.parse(encodedExtendedTypes(sample));
 
-	return decodedExtendedTypes(JSON.stringify({
-		...data,
-		[docType]: entityData.code || entityData.collectionName,
-	}, null, 2));
+	return decodedExtendedTypes(
+		JSON.stringify(
+			{
+				...data,
+				[docType]: entityData.code || entityData.collectionName,
+			},
+			null,
+			2,
+		),
+	);
 };
 
 const insertSample = ({ containerData, entityData, sample }) => {
-	return getCollection(getContainerName(containerData)) + `.insert(${updateSample(sample, containerData[0], entityData?.[0] || {})});`;
+	return (
+		getCollection(getContainerName(containerData)) +
+		`.insert(${updateSample(sample, containerData[0], entityData?.[0] || {})});`
+	);
 };
 
-const insertSamples = (data) => {
+const insertSamples = data => {
 	const name = getDbId(data.containerData);
 	const useDb = name ? `use ${name};` : '';
-	const samples = data.entities.map(entityId => insertSample({
-		containerData: data.containerData,
-		entityData: (data.entityData[entityId] || []),
-		sample: data.jsonData[entityId],
-	})).join('\n\n');
+	const samples = data.entities
+		.map(entityId =>
+			insertSample({
+				containerData: data.containerData,
+				entityData: data.entityData[entityId] || [],
+				sample: data.jsonData[entityId],
+			}),
+		)
+		.join('\n\n');
 
 	return [useDb, samples].filter(Boolean).join('\n\n');
 };
-
 
 function decodedExtendedTypes(data, returnInStr) {
 	let decodedData;
@@ -193,7 +226,7 @@ function decodedExtendedTypes(data, returnInStr) {
 		});
 
 	return decodedData;
-};
+}
 
 function encodedExtendedTypes(data, returnInStr) {
 	let encodedData;
@@ -227,12 +260,9 @@ function encodedExtendedTypes(data, returnInStr) {
 				);
 			},
 		)
-		.replace(
-			/\{\s*\"_bsontype\": \"Code\",\s*\"code\": \"(.*?})\".*?\s*\}/gi,
-			function (a, b) {
-				return lineBeginning + `$__js_${b}` + lineEnding;
-			},
-		)
+		.replace(/\{\s*\"_bsontype\": \"Code\",\s*\"code\": \"(.*?})\".*?\s*\}/gi, function (a, b) {
+			return lineBeginning + `$__js_${b}` + lineEnding;
+		})
 		.replace(/\"type\": \"minKey\",\s*.*?\"sample\": \{\s*\"\$minKey\": (\d*)\s*\}/gi, function (a, b) {
 			return a.replace(/\{\s*\"\$minKey\": (\d*)\s*\}/, function (a, b) {
 				return lineBeginning + `$__minKey_${b}` + lineEnding;
@@ -245,7 +275,7 @@ function encodedExtendedTypes(data, returnInStr) {
 		});
 
 	return encodedData;
-};
+}
 
 module.exports = {
 	getScript,

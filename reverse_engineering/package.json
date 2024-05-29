@@ -1,13 +1,7 @@
 {
-  "name": "cosmosdb",
-  "version": "1.0.0",
-  "description": "",
-  "author": "Hackolade",
-  "dependencies": {
-    "axios": "^0.26.0",
-    "bson": "1.1.5",
-    "mongodb": "^3.6.1",
-    "qs": "^6.9.6"
-  },
-  "installed": true
+    "name": "cosmosdb",
+    "version": "1.0.0",
+    "description": "",
+    "author": "Hackolade",
+    "installed": true
 }

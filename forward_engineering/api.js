@@ -1,11 +1,12 @@
-const applyToInstanceHelper = require("./helpers/applyToInstanceHelper");
-const scriptHelper = require("./helpers/scriptHelper");
+const applyToInstanceHelper = require('./helpers/applyToInstanceHelper');
+const scriptHelper = require('./helpers/scriptHelper');
 
 module.exports = {
 	generateContainerScript(data, logger, callback, app) {
 		try {
 			const _ = app.require('lodash');
-			const insertSamplesOption = _.get(data, 'options.additionalOptions', []).find(option => option.id === 'INCLUDE_SAMPLES') || {};
+			const insertSamplesOption =
+				_.get(data, 'options.additionalOptions', []).find(option => option.id === 'INCLUDE_SAMPLES') || {};
 			const withSamples = data.options.origin !== 'ui';
 			let script = scriptHelper.getScript(data);
 			const samples = scriptHelper.insertSamples(data);
@@ -14,7 +15,6 @@ module.exports = {
 			if (withSamples || !insertSamplesOption.value) {
 				return callback(null, script);
 			}
-
 
 			return callback(null, [
 				{ title: 'MongoDB script', script },

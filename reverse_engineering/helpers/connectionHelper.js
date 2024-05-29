@@ -1,13 +1,13 @@
 const MongoClient = require('mongodb').MongoClient;
 
-function generateConnectionParams(connectionInfo){
+function generateConnectionParams(connectionInfo) {
 	return {
 		url: `mongodb://${connectionInfo.userName}:${connectionInfo.password}@${connectionInfo.host}:${connectionInfo.port}?ssl=true`,
 		options: {
-			sslValidate:false,
+			sslValidate: false,
 			useNewUrlParser: true,
 			useUnifiedTopology: true,
-		}
+		},
 	};
 }
 

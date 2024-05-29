@@ -117,33 +117,32 @@ making sure that you maintain a proper JSON format.
 [
 	{
 		"lowerTab": "Details",
-		"containerLevelKeys": [{
-			"labelName": "Document key",
-			"propertyName": "Document key",
-			"propertyKeyword": "id",
-			"defaultName": "id",
-			"propertyPrimaryKey": true,
-			"propertyType": "text",
-			"typeName": "Data type",
-			"typeOptions": ["objectId"],
-			"defaultType": "objectId",
-			"disabledFieldOption": true
-		},{
-			"labelName": "Document type",
-			"propertyName": "Doc type field name",
-			"propertyKeyword": "docType",
-			"defaultName": "type",
-			"propertyPrimaryKey": false,
-			"propertyType": "text",
-			"typeName": "Data type",
-			"typeOptions": [
-				"string",
-				"numeric",
-				"boolean"
-			],
-			"defaultType": "string",
-			"disabledFieldOption": false
-		}],
+		"containerLevelKeys": [
+			{
+				"labelName": "Document key",
+				"propertyName": "Document key",
+				"propertyKeyword": "id",
+				"defaultName": "id",
+				"propertyPrimaryKey": true,
+				"propertyType": "text",
+				"typeName": "Data type",
+				"typeOptions": ["objectId"],
+				"defaultType": "objectId",
+				"disabledFieldOption": true
+			},
+			{
+				"labelName": "Document type",
+				"propertyName": "Doc type field name",
+				"propertyKeyword": "docType",
+				"defaultName": "type",
+				"propertyPrimaryKey": false,
+				"propertyType": "text",
+				"typeName": "Data type",
+				"typeOptions": ["string", "numeric", "boolean"],
+				"defaultType": "string",
+				"disabledFieldOption": false
+			}
+		],
 		"structure": [
 			{
 				"propertyName": "Description",
@@ -157,10 +156,7 @@ making sure that you maintain a proper JSON format.
 				"propertyKeyword": "storageCapacity",
 				"propertyTooltip": "A database is a logical container of one or more collections",
 				"propertyType": "select",
-				"options": [
-					"Fixed (10GB)",
-					"Unlimited"
-				]
+				"options": ["Fixed (10GB)", "Unlimited"]
 			},
 			{
 				"propertyName": "Throughput (RU/s)",
@@ -174,21 +170,14 @@ making sure that you maintain a proper JSON format.
 				"propertyKeyword": "rump",
 				"propertyTooltip": "For each 100 RU per second provisioned, 1000 RU per minute can be provisioned.",
 				"propertyType": "select",
-				"options": [
-					"OFF",
-					"On"
-				]
+				"options": ["OFF", "On"]
 			},
 			{
 				"propertyName": "Time to live",
 				"propertyKeyword": "TTL",
 				"propertyTooltip": "Time to live",
 				"propertyType": "select",
-				"options": [
-					"Off",
-					"On (no default)",
-					"On"
-				]
+				"options": ["Off", "On (no default)", "On"]
 			},
 			{
 				"propertyName": "TTL default seconds",
@@ -224,18 +213,20 @@ making sure that you maintain a proper JSON format.
 				"propertyName": "Unique keys",
 				"propertyKeyword": "uniqueKey",
 				"propertyType": "group",
-				"structure": [{
-					"propertyName": "Attribute path",
-					"propertyKeyword": "attributePath",
-					"propertyType": "fieldList",
-					"template": "orderedList",
-					"templateOptions": {
-						"divider": ".",
-						"front": false,
-						"entityName": false,
-						"topLevel": true
+				"structure": [
+					{
+						"propertyName": "Attribute path",
+						"propertyKeyword": "attributePath",
+						"propertyType": "fieldList",
+						"template": "orderedList",
+						"templateOptions": {
+							"divider": ".",
+							"front": false,
+							"entityName": false,
+							"topLevel": true
+						}
 					}
-				}]
+				]
 			},
 			{
 				"propertyName": "Comments",
@@ -248,144 +239,132 @@ making sure that you maintain a proper JSON format.
 	},
 	{
 		"lowerTab": "Indexes",
-		"structure": [{
-			"propertyName": "Indexes",
-			"propertyType": "group",
-			"propertyKeyword": "indexes",
-			"propertyTooltip": "",
-			"structure": [
-				{
-					"propertyName": "Name",
-					"propertyKeyword": "name",
-					"propertyTooltip": "",
-					"propertyType": "text"
-				},
-				{
-					"propertyName": "Activated",
-					"propertyKeyword": "isActivated",
-					"propertyTooltip": "Deactivated item will be not included in FE script",
-					"propertyType": "checkbox",
-					"defaultValue": true
-				},
-				{
-					"propertyName": "Description",
-					"propertyKeyword": "indexDescription",
-					"propertyTooltip": "description",
-					"propertyType": "details",
-					"template": "textarea"
-				},
-				{
-					"propertyName": "Type",
-					"propertyKeyword": "indexType",
-					"propertyTooltip": "Index type",
-					"propertyType": "select",
-					"defaultValue": "Single Field",
-					"options": [
-						"Single Field",
-						"Wildcard",
-						"Compound"
-					]
-				},
-				{
-					"propertyName": "Key",
-					"propertyKeyword": "indexKey",
-					"shouldValidate": false,
-					"propertyTooltip": "Index key property",
-					"propertyType": "fieldList",
-					"template": "orderedList",
-					"types": [
-						"ascending",
-						"descending",
-						"2dsphere"
-					],
-					"templateOptions": {
-						"divider": ".",
-						"front": false,
-						"root": false,
-						"entityName": false,
-						"maxField": 1,
-						"ending": {
-							"array": "[]",
-							"default": ""
-						},
-						"addType": false
+		"structure": [
+			{
+				"propertyName": "Indexes",
+				"propertyType": "group",
+				"propertyKeyword": "indexes",
+				"propertyTooltip": "",
+				"structure": [
+					{
+						"propertyName": "Name",
+						"propertyKeyword": "name",
+						"propertyTooltip": "",
+						"propertyType": "text"
 					},
-					"dependency": {
-						"type": "or",
-						"values": [
-							{
-								"key": "indexType",
-								"value": "Single Field"
+					{
+						"propertyName": "Activated",
+						"propertyKeyword": "isActivated",
+						"propertyTooltip": "Deactivated item will be not included in FE script",
+						"propertyType": "checkbox",
+						"defaultValue": true
+					},
+					{
+						"propertyName": "Description",
+						"propertyKeyword": "indexDescription",
+						"propertyTooltip": "description",
+						"propertyType": "details",
+						"template": "textarea"
+					},
+					{
+						"propertyName": "Type",
+						"propertyKeyword": "indexType",
+						"propertyTooltip": "Index type",
+						"propertyType": "select",
+						"defaultValue": "Single Field",
+						"options": ["Single Field", "Wildcard", "Compound"]
+					},
+					{
+						"propertyName": "Key",
+						"propertyKeyword": "indexKey",
+						"shouldValidate": false,
+						"propertyTooltip": "Index key property",
+						"propertyType": "fieldList",
+						"template": "orderedList",
+						"types": ["ascending", "descending", "2dsphere"],
+						"templateOptions": {
+							"divider": ".",
+							"front": false,
+							"root": false,
+							"entityName": false,
+							"maxField": 1,
+							"ending": {
+								"array": "[]",
+								"default": ""
 							},
-							{
-								"key": "indexType",
-								"exist": false
-							}
-						]
-					}
-				},
-				{
-					"propertyName": "Key",
-					"propertyKeyword": "indexKey",
-					"shouldValidate": false,
-					"propertyTooltip": "Index key property",
-					"propertyType": "fieldList",
-					"template": "orderedList",
-					"types": [
-						"ascending",
-						"descending"
-					],
-					"templateOptions": {
-						"divider": ".",
-						"front": false,
-						"root": true,
-						"rootTemplate": "$**",
-						"entityName": false,
-						"maxField": 1,
-						"ending": {
-							"document": "$**",
-							"array": "$**",
-							"default": ""
+							"addType": false
 						},
-						"addType": false
+						"dependency": {
+							"type": "or",
+							"values": [
+								{
+									"key": "indexType",
+									"value": "Single Field"
+								},
+								{
+									"key": "indexType",
+									"exist": false
+								}
+							]
+						}
 					},
-					"dependency": {
-						"key": "indexType",
-						"value": "Wildcard"
-					}
-				},
-				{
-					"propertyName": "Key",
-					"propertyKeyword": "indexKey",
-					"shouldValidate": false,
-					"propertyTooltip": "Index key property",
-					"propertyType": "fieldList",
-					"template": "orderedList",
-					"types": [
-						"ascending",
-						"descending"
-					],
-					"templateOptions": {
-						"divider": ".",
-						"front": false,
-						"root": false,
-						"entityName": false,
-						"topLevel": true,
-						"addType": false
+					{
+						"propertyName": "Key",
+						"propertyKeyword": "indexKey",
+						"shouldValidate": false,
+						"propertyTooltip": "Index key property",
+						"propertyType": "fieldList",
+						"template": "orderedList",
+						"types": ["ascending", "descending"],
+						"templateOptions": {
+							"divider": ".",
+							"front": false,
+							"root": true,
+							"rootTemplate": "$**",
+							"entityName": false,
+							"maxField": 1,
+							"ending": {
+								"document": "$**",
+								"array": "$**",
+								"default": ""
+							},
+							"addType": false
+						},
+						"dependency": {
+							"key": "indexType",
+							"value": "Wildcard"
+						}
 					},
-					"dependency": {
-						"key": "indexType",
-						"value": "Compound"
+					{
+						"propertyName": "Key",
+						"propertyKeyword": "indexKey",
+						"shouldValidate": false,
+						"propertyTooltip": "Index key property",
+						"propertyType": "fieldList",
+						"template": "orderedList",
+						"types": ["ascending", "descending"],
+						"templateOptions": {
+							"divider": ".",
+							"front": false,
+							"root": false,
+							"entityName": false,
+							"topLevel": true,
+							"addType": false
+						},
+						"dependency": {
+							"key": "indexType",
+							"value": "Compound"
+						}
+					},
+					{
+						"propertyName": "Comments",
+						"propertyKeyword": "indexComments",
+						"propertyTooltip": "comments",
+						"propertyType": "details",
+						"template": "textarea"
 					}
-				},
-				{
-					"propertyName": "Comments",
-					"propertyKeyword": "indexComments",
-					"propertyTooltip": "comments",
-					"propertyType": "details",
-					"template": "textarea"
-				}
-			]
-		}]
+				]
+			}
+		]
 	}
 ]

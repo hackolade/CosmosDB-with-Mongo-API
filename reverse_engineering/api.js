@@ -24,7 +24,9 @@ module.exports = {
 				logger.log('error', createError(ERROR_CONNECTION, err), 'Connection error');
 				return cb({
 					message:
-						err.code === 18 ? 'Authentication failed. Please, check connection settings and try again' : err.message,
+						err.code === 18
+							? 'Authentication failed. Please, check connection settings and try again'
+							: err.message,
 					stack: err.stack,
 				});
 			});
@@ -79,7 +81,9 @@ module.exports = {
 
 				if (!db) {
 					connection.close();
-					return cb(createError(ERROR_DB_CONNECTION, `Failed connection to database ${connectionInfo.database}`));
+					return cb(
+						createError(ERROR_DB_CONNECTION, `Failed connection to database ${connectionInfo.database}`),
+					);
 				}
 
 				db.listCollections().toArray((err, collections) => {
@@ -88,7 +92,9 @@ module.exports = {
 						connection.close();
 						cb(createError(ERROR_LIST_COLLECTION, err));
 					} else {
-						collections = connectionInfo.includeSystemCollection ? collections : filterSystemCollections(collections);
+						collections = connectionInfo.includeSystemCollection
+							? collections
+							: filterSystemCollections(collections);
 						logger.log('info', collections, 'Mapped collection list');
 
 						async.map(
@@ -151,7 +157,9 @@ module.exports = {
 
 				if (!db) {
 					connection.close();
-					return cb(createError(ERROR_DB_CONNECTION, `Failed connection to database ${connectionInfo.database}`));
+					return cb(
+						createError(ERROR_DB_CONNECTION, `Failed connection to database ${connectionInfo.database}`),
+					);
 				}
 
 				logger.log(
@@ -170,7 +178,12 @@ module.exports = {
 						let collectionNames = (
 							connectionInfo.includeSystemCollection ? collections : filterSystemCollections(collections)
 						).map(item => item.name);
-						logger.log('info', collectionNames, 'Collection list for current database', connectionInfo.hiddenKeys);
+						logger.log(
+							'info',
+							collectionNames,
+							'Collection list for current database',
+							connectionInfo.hiddenKeys,
+						);
 						handleBucket(_, async, connectionInfo, collectionNames, db, function (err, items) {
 							connection.close();
 							if (err) {
@@ -253,7 +266,7 @@ module.exports = {
 								logger.log('error', err, 'Error while getting control pane data');
 
 								return {};
-						  })
+							})
 						: Promise.resolve({}),
 				]).then(([buildInfo, controlPaneData]) => {
 					modelInfo = {
@@ -369,9 +382,13 @@ module.exports = {
 													};
 
 													if (fieldInference.active === 'field') {
-														documentsPackage.documentTemplate = newArrayDocuments[0] || null;
+														documentsPackage.documentTemplate =
+															newArrayDocuments[0] || null;
 													}
-													if (documentsPackage.documents.length > 0 || includeEmptyCollection) {
+													if (
+														documentsPackage.documents.length > 0 ||
+														includeEmptyCollection
+													) {
 														collectionPackages.push(documentsPackage);
 													}
 												});
@@ -586,7 +603,13 @@ function handleBucket(_, async, connectionInfo, collectionNames, database, dbIte
 						documentTypes = _.uniq(documentTypes);
 					}
 
-					let dataItem = prepareConnectionDataItem(_, documentTypes, collectionName, database, documents.length === 0);
+					let dataItem = prepareConnectionDataItem(
+						_,
+						documentTypes,
+						collectionName,
+						database,
+						documents.length === 0,
+					);
 					return collItemCallback(err, dataItem);
 				}
 			});
@@ -677,7 +700,10 @@ function getDocumentKindDataFromInfer(data, probability) {
 						continue;
 					}
 
-					if (inference[key]['%docs'] >= documentKind.probability && inference[key].samples.length < minCount) {
+					if (
+						inference[key]['%docs'] >= documentKind.probability &&
+						inference[key].samples.length < minCount
+					) {
 						minCount = inference[key].samples.length;
 						documentKind.probability = inference[key]['%docs'];
 						documentKind.key = key;
