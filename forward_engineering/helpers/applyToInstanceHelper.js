@@ -1,5 +1,5 @@
 const vm = require('vm');
-const bson = require('../../reverse_engineering/node_modules/bson');
+const bson = require('bson');
 const connectionHelper = require('../../reverse_engineering/helpers/connectionHelper');
 const readNdJsonByLine = require('./ndJsonHelper');
 
