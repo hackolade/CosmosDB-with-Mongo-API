@@ -11,6 +11,8 @@
 		"foreignCollection": "",
 		"foreignField": [],
 		"properties": [],
+		"minProperties": "",
+		"maxProperties": "",
 		"additionalProperties": false
 	}
 }
