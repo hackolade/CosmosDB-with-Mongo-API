@@ -363,7 +363,7 @@ module.exports = {
 											} else {
 												docKindsList.forEach(docKindItem => {
 													let newArrayDocuments = documents.filter(item => {
-														return item[documentKindName] == docKindItem;
+														return item[documentKindName] === docKindItem;
 													});
 
 													let documentsPackage = {
