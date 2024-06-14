@@ -214,17 +214,7 @@ making sure that you maintain a proper JSON format.
 			"additionalItems",
 			"comments"
 		],
-		"binary": [
-			"name",
-			"code",
-			"schemaId",
-			"description",
-			"type",
-			"required",
-			"dependencies",
-			"sample",
-			"comments"
-		],
+		"binary": ["name", "code", "schemaId", "description", "type", "required", "dependencies", "sample", "comments"],
 		"date": [
 			"name",
 			"code",
@@ -280,24 +270,8 @@ making sure that you maintain a proper JSON format.
 			"sample",
 			"comments"
 		],
-		"symbol": [
-			"name",
-			"code",
-			"schemaId",
-			"description",
-			"type",
-			"required",
-			"dependencies",
-			"comments"
-		],
-		"null": [
-			"name",
-			"code",
-			"schemaId",
-			"description",
-			"type",
-			"comments"
-		],
+		"symbol": ["name", "code", "schemaId", "description", "type", "required", "dependencies", "comments"],
+		"null": ["name", "code", "schemaId", "description", "type", "comments"],
 		"minKey": [
 			"name",
 			"code",

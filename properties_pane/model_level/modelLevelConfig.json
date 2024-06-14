@@ -123,9 +123,7 @@ making sure that you maintain a proper JSON format.
 				"propertyKeyword": "dbVendor",
 				"propertyTooltip": "db vendor",
 				"propertyType": "select",
-				"options": [
-					"CosmosDB"
-				],
+				"options": ["CosmosDB"],
 				"disabledOption": true
 			},
 			{
@@ -159,38 +157,38 @@ making sure that you maintain a proper JSON format.
 				"propertyType": "select",
 				"options": [
 					"",
-					"West US", 
-					"West US 2", 
-					"West Central US", 
+					"West US",
+					"West US 2",
+					"West Central US",
 					"East US",
-					"East US 2", 
-					"Central US", 
-					"South Central US", 
-					"North Central US", 
-					"West Europe", 
+					"East US 2",
+					"Central US",
+					"South Central US",
+					"North Central US",
+					"West Europe",
 					"North Europe",
 					"France Central",
-					"East Asia", 
-					"Southeast Asia", 
-					"Japan West", 
-					"Japan East", 
-					"Australia Southeast", 
-					"Australia East", 
-					"Central India", 
-					"South India", 
-					"West India", 
-					"Canada East", 
-					"Canada Central", 
-					"Germany Central", 
+					"East Asia",
+					"Southeast Asia",
+					"Japan West",
+					"Japan East",
+					"Australia Southeast",
+					"Australia East",
+					"Central India",
+					"South India",
+					"West India",
+					"Canada East",
+					"Canada Central",
+					"Germany Central",
 					"Germany Northeast",
-					"China North", 
-					"China East", 
-					"Korea South", 
+					"China North",
+					"China East",
+					"Korea South",
 					"Korea Central",
-					"UK West", 
-					"UK South", 
-					"Brazil South", 
-					"USGov Arizona", 
+					"UK West",
+					"UK South",
+					"Brazil South",
+					"USGov Arizona",
 					"USGov Texas"
 				],
 				"disabledOption": false
@@ -200,13 +198,7 @@ making sure that you maintain a proper JSON format.
 				"propertyKeyword": "apiExperience",
 				"propertyTooltip": "Default experience",
 				"propertyType": "select",
-				"options": [
-					"SQL API",
-					"Mongo API",
-					"Cassandra API",
-					"Gremlin API",
-					"Table API"
-				],
+				"options": ["SQL API", "Mongo API", "Cassandra API", "Gremlin API", "Table API"],
 				"disabledOption": true
 			},
 			{
@@ -214,11 +206,7 @@ making sure that you maintain a proper JSON format.
 				"propertyKeyword": "dbVersion",
 				"propertyTooltip": "Database version",
 				"propertyType": "select",
-				"options": [
-					"3.2.0",
-					"3.6.0",
-					"4.0.0"
-				]
+				"options": ["3.2.0", "3.6.0", "4.0.0"]
 			},
 			{
 				"propertyName": "Locations",
@@ -264,13 +252,7 @@ making sure that you maintain a proper JSON format.
 				"propertyKeyword": "defaultConsistency",
 				"propertyTooltip": "Default consistency policy level",
 				"propertyType": "select",
-				"options": [
-					"Session",
-					"Strong",
-					"Bounded staleness",
-					"Consistent prefix",
-					"Eventual"
-				],
+				"options": ["Session", "Strong", "Bounded staleness", "Consistent prefix", "Eventual"],
 				"disabledOption": false
 			},
 			{

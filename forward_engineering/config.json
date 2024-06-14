@@ -12,12 +12,14 @@
 		"container": true,
 		"view": false
 	},
-	"additionalOptions": [{
-		"id": "INCLUDE_SAMPLES",
-		"value": true,
-		"name": "Include sample data",
-		"align": "right"
-	}],
+	"additionalOptions": [
+		{
+			"id": "INCLUDE_SAMPLES",
+			"value": true,
+			"name": "Include sample data",
+			"align": "right"
+		}
+	],
 	"splitView": {
 		"byAdditionalOptions": ["INCLUDE_SAMPLES"]
 	},
