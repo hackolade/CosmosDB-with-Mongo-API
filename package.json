@@ -55,7 +55,7 @@
     },
     "description": "Hackolade plugin for Azure Cosmos DB with MongoDB API",
     "dependencies": {
-        "axios": "0.26.0",
+        "axios": "0.28.0",
         "bson": "1.1.5",
         "lodash": "4.17.21",
         "mongodb": "3.6.1",
