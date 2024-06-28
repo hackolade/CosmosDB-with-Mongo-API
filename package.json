@@ -1,6 +1,6 @@
 {
     "name": "CosmosDB-with-Mongo-API",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "author": "hackolade",
     "engines": {
         "hackolade": "5.1.3",
@@ -55,11 +55,11 @@
     },
     "description": "Hackolade plugin for Azure Cosmos DB with MongoDB API",
     "dependencies": {
-        "axios": "0.26.0",
+        "axios": "1.7.2",
         "bson": "1.1.5",
         "lodash": "4.17.21",
-        "mongodb": "3.6.1",
-        "qs": "6.9.6"
+        "mongodb": "3.7.4",
+        "qs": "6.12.1"
     },
     "lint-staged": {
         "*.{js,json}": "prettier --write"
