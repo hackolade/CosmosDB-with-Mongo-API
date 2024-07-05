@@ -650,10 +650,14 @@ function generateCustomInferSchema(documents, params) {
 		for (let prop in item) {
 			if (inferSchema.properties.hasOwnProperty(prop)) {
 				inferSchema.properties[prop]['#docs']++;
-				inferSchema.properties[prop]['samples'].indexOf(item[prop]) === -1 &&
-				inferSchema.properties[prop]['samples'].length < sampleSize
-					? inferSchema.properties[prop]['samples'].push(item[prop])
-					: '';
+
+				if (
+					inferSchema.properties[prop]['samples'].indexOf(item[prop]) === -1 &&
+					inferSchema.properties[prop]['samples'].length < sampleSize
+				) {
+					inferSchema.properties[prop]['samples'].push(item[prop])
+				}
+
 				inferSchema.properties[prop]['type'] = typeOf(item[prop]);
 			} else {
 				inferSchema.properties[prop] = {
