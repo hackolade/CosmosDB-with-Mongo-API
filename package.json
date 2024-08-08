@@ -50,7 +50,10 @@
             "enableReverseEngineering": true,
             "enableForwardEngineering": true,
             "enableReverseEngineeringDetectionSchemaByContent": true,
-            "enableReversingDateTypeAsISODate": true
+            "enableReversingDateTypeAsISODate": true,
+            "relationships": {
+                "entityNameSeparator": "."
+            }
         }
     },
     "description": "Hackolade plugin for Azure Cosmos DB with MongoDB API",
