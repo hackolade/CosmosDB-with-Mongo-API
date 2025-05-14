@@ -1,5 +1,7 @@
-const CosmosClient = require('./CosmosClient');
+const _ = require('lodash');
 const bson = require('bson');
+const async = require('async');
+const CosmosClient = require('./CosmosClient');
 const connectionHelper = require('./helpers/connectionHelper');
 
 const ERROR_CONNECTION = 1;
@@ -66,7 +68,6 @@ module.exports = {
 	},
 
 	getDocumentKinds: function (connectionInfo, logger, cb, app) {
-		const async = app.require('async');
 		this.connect(connectionInfo, logger, (err, connection) => {
 			if (err) {
 				logger.log('error', err);
@@ -141,8 +142,6 @@ module.exports = {
 	},
 
 	getDbCollectionsNames: function (connectionInfo, logger, cb, app) {
-		const _ = app.require('lodash');
-		const async = app.require('async');
 		this.connect(connectionInfo, logger, (err, connection) => {
 			if (err) {
 				logger.log('error', err);
@@ -194,7 +193,6 @@ module.exports = {
 	},
 
 	getDbCollectionsData: function (data, logger, cb, app) {
-		const async = app.require('async');
 		let includeEmptyCollection = data.includeEmptyCollection;
 		let { recordSamplingSettings, fieldInference } = data;
 		logger.progress = logger.progress || (() => {});
