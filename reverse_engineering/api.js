@@ -14,9 +14,6 @@ const ERROR_COLLECTION_DATA = 7;
 
 module.exports = {
 	connect: function (connectionInfo, logger, cb) {
-		logger.clear();
-		logger.log('info', connectionInfo, 'Reverse-Engineering connection settings', connectionInfo.hiddenKeys);
-
 		connectionHelper
 			.connect(connectionInfo)
 			.then(connection => cb(null, connection))
@@ -199,12 +196,6 @@ module.exports = {
 		let includeEmptyCollection = data.includeEmptyCollection;
 		let { recordSamplingSettings, fieldInference } = data;
 		logger.progress = logger.progress || (() => {});
-		logger.log(
-			'info',
-			getSamplingInfo(recordSamplingSettings, fieldInference),
-			'Reverse-Engineering sampling params',
-			data.hiddenKeys,
-		);
 
 		let bucketList = data.collectionData.dataBaseNames;
 
