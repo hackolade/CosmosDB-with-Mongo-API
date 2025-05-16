@@ -60,6 +60,9 @@ const applyToInstanceHelper = {
 };
 
 const connect = (connectionInfo, logger) => {
+	logger.clear();
+	logger.log('info', connectionInfo, 'Reverse-Engineering connection settings', connectionInfo.hiddenKeys);
+
 	return connectionHelper
 		.connect(connectionInfo)
 		.then(connection => {
