@@ -1,8 +1,9 @@
 const MongoClient = require('mongodb').MongoClient;
+const { escapeV6IpForURL } = require('./escapeV6IPForURL');
 
 function generateConnectionParams(connectionInfo) {
 	return {
-		url: `mongodb://${connectionInfo.userName}:${connectionInfo.password}@${connectionInfo.host}:${connectionInfo.port}?ssl=true`,
+		url: `mongodb://${connectionInfo.userName}:${connectionInfo.password}@${escapeV6IpForURL({ host: connectionInfo.host })}:${connectionInfo.port}?ssl=true`,
 		options: {
 			sslValidate: false,
 			useNewUrlParser: true,
