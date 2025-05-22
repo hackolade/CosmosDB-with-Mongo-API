@@ -11,9 +11,9 @@ const ip = require('ip');
  * When the URL also contains a port number the notation is: https://[2001:db8:85a3:8d3:1319:8a2e:370:7348]:443/
  *
  * @param {{
-* 	host: string
-* }} param
-* @returns {string}
+ * 	host: string
+ * }} param
+ * @returns {string}
 */
 function escapeV6IpForURL({ host }) {
 	/**
@@ -22,7 +22,7 @@ function escapeV6IpForURL({ host }) {
 	 * !ip.isV4Format(host) check required because isV6Format returns true for ipv4 address because of backward compatibility
 	 */
 	if (ip.isV6Format(host) && !ip.isV4Format(host)) {
-		return `[${host}]`;
+		return escapeHost(host);
 	}
 
 	const isUrlValid = isValidURL(host);
@@ -42,7 +42,20 @@ function escapeV6IpForURL({ host }) {
 	const port = separatedIpPortionsAndPort.at(-1);
 	const escapedIpWithPort = `[${ipPortions.join(':')}]:${port}`;
 
-	return host.replace(unescapedIpWithPort, escapedIpWithPort);
+	const escapedHost = host.replace(unescapedIpWithPort, escapedIpWithPort);
+	if (isValidURL(escapedHost)) {
+		return escapedHost;
+	}
+
+	return host.replace(unescapedIpWithPort, escapeHost(unescapedIpWithPort));
+}
+
+/**
+ * @param {string} host
+ * @returns {string}
+ */
+function escapeHost(host) {
+	return `[${host}]`;
 }
 
 /**
