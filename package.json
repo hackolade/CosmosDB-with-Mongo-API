@@ -53,7 +53,8 @@
             "enableReversingDateTypeAsISODate": true,
             "relationships": {
                 "entityNameSeparator": "."
-            }
+            },
+			"disableMultipleNonScalarTypes": false
         }
     },
     "description": "Hackolade plugin for Azure Cosmos DB with MongoDB API",
