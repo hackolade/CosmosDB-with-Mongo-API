@@ -54,7 +54,8 @@
             "relationships": {
                 "entityNameSeparator": "."
             },
-            "disableMultipleNonScalarTypes": false
+            "disableMultipleNonScalarTypes": false,
+            "restrictNestedFieldsAsPrimaryKey": false
         }
     },
     "description": "Hackolade plugin for Azure Cosmos DB with MongoDB API",
