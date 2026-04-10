@@ -62,7 +62,7 @@
     "dependencies": {
         "@webpod/ip": "0.6.1",
         "async": "3.2.6",
-        "axios": "1.13.5",
+        "axios": "1.15.0",
         "bson": "1.1.5",
         "lodash": "4.18.1",
         "mongodb": "3.7.4",
