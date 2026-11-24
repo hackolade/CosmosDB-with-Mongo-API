@@ -1,6 +1,5 @@
 const crypto = require('crypto');
-const axios = require('axios');
-const qs = require('qs');
+const { hckFetch } = require('@hackolade/fetch');
 
 class CosmosClient {
 	constructor(dbName, host, masterKey, isLocal) {
@@ -64,18 +63,23 @@ class CosmosClient {
 		);
 	}
 
-	callApi({ url, resourceType = '', resourceId = '' }, method = 'get') {
+	async callApi({ url, resourceType = '', resourceId = '' }, method = 'get') {
 		const date = new Date().toUTCString();
-		return axios({
-			method,
-			url,
+		const response = await hckFetch(url, {
+			method: method.toUpperCase(),
 			headers: {
 				'x-ms-version': '2017-02-22',
 				'x-ms-date': date,
 				'Content-Type': 'application/json',
 				authorization: this.getAuthToken(method, resourceType, resourceId, date),
 			},
-		}).then(({ data }) => data);
+		});
+
+		if (response.status !== 200) {
+			throw new Error(await response.text());
+		}
+
+		return response.json();
 	}
 
 	getAuthToken(verb = '', resourceType = '', resourceId = '', date) {
@@ -115,27 +119,27 @@ class CosmosClient {
 		const accNameRegex = /(https:\/\/)?(.+)\.documents.+/i;
 		const accountName = accNameRegex.test(host) ? accNameRegex.exec(host)[2] : '';
 		const tokenBaseURl = `https://login.microsoftonline.com/${tenantId}/oauth2/token`;
-		const { data: tokenData } = await axios({
-			method: 'post',
-			url: tokenBaseURl,
-			data: qs.stringify({
-				grant_type: 'client_credentials',
-				client_id: clientId,
-				client_secret: appSecret,
-				resource: 'https://management.azure.com/',
-			}),
+		const urlParams = new URLSearchParams();
+		urlParams.append('grant_type', 'client_credentials');
+		urlParams.append('client_id', clientId);
+		urlParams.append('client_secret', appSecret);
+		urlParams.append('resource', 'https://management.azure.com/');
+
+		const tokenResponse = await hckFetch(tokenBaseURl, {
+			method: 'POST',
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded',
 			},
+			body: urlParams,
 		});
+		const tokenData = await parseJsonResponse(tokenResponse);
 		const dbAccountBaseUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/${accountName}?api-version=2015-04-08`;
-		let { data: accountData } = await axios({
-			method: 'get',
-			url: dbAccountBaseUrl,
+		const accountResponse = await hckFetch(dbAccountBaseUrl, {
 			headers: {
 				'Authorization': `${tokenData.token_type} ${tokenData.access_token}`,
 			},
 		});
+		let accountData = await parseJsonResponse(accountResponse);
 
 		if (Array.isArray(accountData.value)) {
 			accountData = accountData.value[0];
@@ -167,6 +171,14 @@ class CosmosClient {
 			),
 		};
 	}
+}
+
+async function parseJsonResponse(response) {
+	if (response.status !== 200) {
+		throw new Error(await response.text());
+	}
+
+	return response.json();
 }
 
 module.exports = CosmosClient;
